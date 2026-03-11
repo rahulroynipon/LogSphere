@@ -4,14 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogSphere Developer Dashboard</title>
+    <script>
+        // Apply theme immediately to prevent FOUC (Flash of Unstyled Content)
+        (function() {
+            const savedTheme = localStorage.getItem('LogSphereTheme') || 'system';
+            function applyTheme(theme) {
+                if (theme === 'system') {
+                    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', theme);
+                }
+            }
+            applyTheme(savedTheme);
+            
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if ((localStorage.getItem('LogSphereTheme') || 'system') === 'system') {
+                    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                }
+            });
+        })();
+    </script>
     <style>
-        :root {
+        :root, :root[data-theme="dark"] {
             --bg-dark: #0f111a;
             --bg-card: #1a1d27;
             --bg-input: #232733;
+            --bg-expanded: #151720;
             --text-main: #f0f0f0;
             --text-dim: #8b92a5;
             --accent: #5e81ac;
+            --pre-color: #a3be8c;
             
             --level-debug: #8b92a5;
             --level-info: #81a1c1;
@@ -19,6 +43,24 @@
             --level-error: #bf616a;
             
             --border: #2e3440;
+        }
+
+        :root[data-theme="light"] {
+            --bg-dark: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-expanded: #fafafa;
+            --text-main: #111827;
+            --text-dim: #6b7280;
+            --accent: #3b82f6;
+            --pre-color: #059669;
+            
+            --level-debug: #6b7280;
+            --level-info: #2563eb;
+            --level-warn: #d97706;
+            --level-error: #dc2626;
+            
+            --border: #e5e7eb;
         }
 
         * {
@@ -44,6 +86,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap; /* Allows wrapping on medium screens */
+            gap: 1rem; /* Fixes gap when wrapped */
         }
 
         .logo {
@@ -56,6 +100,7 @@
 
         .controls {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
         }
 
@@ -67,6 +112,8 @@
             border-radius: 4px;
             outline: none;
             font-size: 0.9rem;
+            min-width: 0;
+            box-sizing: border-box;
         }
 
         input:focus, select:focus {
@@ -85,6 +132,7 @@
         /* Main Layout */
         main {
             display: flex;
+            flex-direction: column;
             flex: 1;
             overflow: hidden;
         }
@@ -94,6 +142,21 @@
             flex: 1;
             overflow-y: auto;
             padding: 1rem;
+        }
+
+        /* Pagination Bottom Bar */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: var(--bg-card);
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination span {
+            color: var(--text-dim);
+            font-size: 0.9rem;
         }
 
         /* Individual Log Row */
@@ -154,7 +217,7 @@
             display: none;
             padding: 1rem;
             border-top: 1px solid var(--border);
-            background-color: #151720;
+            background-color: var(--bg-expanded);
             border-bottom-left-radius: 6px;
             border-bottom-right-radius: 6px;
         }
@@ -168,7 +231,7 @@
             padding: 1rem;
             border-radius: 6px;
             overflow-x: auto;
-            color: #a3be8c;
+            color: var(--pre-color);
             font-family: "Fira Code", "Courier New", Courier, monospace;
             font-size: 0.85rem;
             line-height: 1.4;
@@ -192,6 +255,47 @@
             text-align: center;
             padding: 2rem;
         }
+
+        /* Responsiveness */
+        @media (max-width: 850px) {
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .controls {
+                flex-wrap: wrap;
+            }
+            .controls > * {
+                flex: 1 1 calc(33% - 10px);
+            }
+            #searchInput {
+                flex: 1 1 100%;
+            }
+            .log-summary {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .log-time {
+                min-width: auto;
+            }
+            .log-message {
+                width: 100%;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            .log-reqid {
+                align-self: flex-start;
+            }
+        }
+        
+        @media (max-width: 500px) {
+            .controls > * {
+                flex: 1 1 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -202,13 +306,22 @@
     </div>
     <div class="controls">
         <input type="text" id="searchInput" placeholder="Search message, reqId, IP..." onkeyup="filterLogs()">
-        <select id="levelFilter" onchange="filterLogs()">
+        <input type="date" id="dateFrom" title="From Date" onchange="filterLogs()">
+        <input type="date" id="dateTo" title="To Date" onchange="filterLogs()">
+        <select id="levelFilter" title="Level" onchange="filterLogs()">
             <option value="ALL">All Levels</option>
             <option value="ERROR">Errors</option>
             <option value="WARN">Warnings</option>
             <option value="INFO">Info</option>
             <option value="DEBUG">Debug</option>
         </select>
+        <select id="themeFilter" title="Theme" onchange="changeTheme()">
+            <option value="system">🖥️ System</option>
+            <option value="dark">🌙 Dark</option>
+            <option value="light">☀️ Light</option>
+        </select>
+        <button onclick="exportCSV()" title="Export filtered logs as CSV">📥 CSV</button>
+        <button id="liveToggleBtn" onclick="toggleLiveRefresh()" style="border-color: var(--border);">🔴 Auto: OFF</button>
         <button onclick="fetchLogs()">🔄 Refresh</button>
     </div>
 </header>
@@ -217,10 +330,28 @@
     <div class="log-container" id="logContainer">
         <div class="loader">Loading logs...</div>
     </div>
+    <div class="pagination" id="paginationControls" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <select id="limitSelect" title="Rows per page" onchange="changeLimit()" style="padding: 0.3rem; font-size: 0.8rem;">
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="250">250</option>
+                <option value="500">500</option>
+            </select>
+            <span id="pageInfo">Page 1 of 1</span>
+        </div>
+        <div style="display: flex; gap: 5px;">
+            <button id="prevBtn" onclick="changePage(-1)">Previous</button>
+            <button id="nextBtn" onclick="changePage(1)">Next</button>
+        </div>
+    </div>
 </main>
 
 <script>
     let rawLogs = [];
+    let currentFilteredLogs = [];
+    let currentPage = 1;
+    let logsPerPage = 100;
 
     // Fetch logs from the API endpoint
     async function fetchLogs() {
@@ -235,23 +366,44 @@
             
             // Sort by newest first
             rawLogs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-            renderLogs(rawLogs);
+            currentFilteredLogs = rawLogs;
+            currentPage = 1;
+            renderLogs();
         } catch(e) {
             container.innerHTML = `<div class="loader" style="color:red">Error loading logs: ${e.message}</div>`;
         }
     }
 
-    // Render an array of log objects into the DOM
-    function renderLogs(logs) {
+    // Render logs with pagination
+    function renderLogs() {
         const container = document.getElementById('logContainer');
+        const paginationControls = document.getElementById('paginationControls');
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
         container.innerHTML = '';
         
-        if(logs.length === 0) {
+        if(currentFilteredLogs.length === 0) {
             container.innerHTML = '<div class="loader">No logs found.</div>';
+            paginationControls.style.display = 'none';
             return;
         }
 
-        logs.forEach(log => {
+        const totalPages = Math.ceil(currentFilteredLogs.length / logsPerPage);
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        paginationControls.style.display = 'flex';
+        pageInfo.innerText = `Page ${currentPage} of ${totalPages} (${currentFilteredLogs.length} total logs)`;
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+
+        const startIndex = (currentPage - 1) * logsPerPage;
+        const endIndex = startIndex + logsPerPage;
+        const logsToDisplay = currentFilteredLogs.slice(startIndex, endIndex);
+
+        logsToDisplay.forEach(log => {
             // Summary row
             const row = document.createElement('div');
             row.className = 'log-row';
@@ -294,14 +446,22 @@
         });
     }
 
-    // Apply local search and level filters
     function filterLogs() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const level = document.getElementById('levelFilter').value;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
         
-        const filtered = rawLogs.filter(log => {
+        currentFilteredLogs = rawLogs.filter(log => {
             // Level match
             if(level !== 'ALL' && log.level !== level) return false;
+            
+            // Date match (Using YYYY-MM-DD string comparison for exact day matching)
+            if(log.timestamp) {
+                const logDate = log.timestamp.split('T')[0];
+                if(dateFrom && logDate < dateFrom) return false;
+                if(dateTo && logDate > dateTo) return false;
+            }
             
             // Text match
             if(!query) return true;
@@ -315,7 +475,73 @@
             return textToSearch.includes(query);
         });
         
-        renderLogs(filtered);
+        // Reset to first page on filter
+        currentPage = 1;
+        renderLogs();
+    }
+
+    function changePage(delta) {
+        currentPage += delta;
+        renderLogs();
+        // Scroll back to top of container
+        document.getElementById('logContainer').scrollTop = 0;
+    }
+
+    function changeLimit() {
+        logsPerPage = parseInt(document.getElementById('limitSelect').value, 10);
+        currentPage = 1; // Reset to page 1 when changing limit
+        renderLogs();
+        document.getElementById('logContainer').scrollTop = 0;
+    }
+
+    // --- Live Auto-Refresh ---
+    let liveRefreshInterval = null;
+    function toggleLiveRefresh() {
+        const btn = document.getElementById('liveToggleBtn');
+        if (liveRefreshInterval) {
+            // Turn Off
+            clearInterval(liveRefreshInterval);
+            liveRefreshInterval = null;
+            btn.innerText = "🔴 Auto: OFF";
+            btn.style.borderColor = "var(--border)";
+            btn.style.color = "var(--text-main)";
+        } else {
+            // Turn On
+            fetchLogs(); // fetch immediately
+            liveRefreshInterval = setInterval(fetchLogs, 3000); // then every 3s
+            btn.innerText = "🟢 Auto: ON";
+            btn.style.borderColor = "var(--pre-color)";
+            btn.style.color = "var(--pre-color)";
+        }
+    }
+
+    // --- Export CSV ---
+    function exportCSV() {
+        if(currentFilteredLogs.length === 0) return alert("No logs to export!");
+        
+        // Define CSV structure
+        const headers = ["Timestamp", "Level", "Message", "RequestID", "Metadata"];
+        const rows = currentFilteredLogs.map(log => {
+            const date = new Date(log.timestamp).toISOString();
+            const reqId = log.meta && log.meta.reqId ? log.meta.reqId : "";
+            // Stringify meta and escape quotes for CSV
+            const metaStr = JSON.stringify(log.meta || {}).replace(/"/g, '""');
+            // Escape main message
+            const msgStr = log.message.replace(/"/g, '""');
+            
+            return `"${date}","${log.level}","${msgStr}","${reqId}","${metaStr}"`;
+        });
+        
+        const csvContent = headers.join(",") + "\n" + rows.join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `logsphere-export-${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Helper to prevent XSS string injections
@@ -328,6 +554,24 @@
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
     }
+
+    // Change theme and save to localStorage
+    function changeTheme() {
+        const theme = document.getElementById('themeFilter').value;
+        localStorage.setItem('LogSphereTheme', theme);
+        if (theme === 'system') {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+    }
+
+    // Set theme dropdown accurately based on preference saved
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem('LogSphereTheme') || 'system';
+        document.getElementById('themeFilter').value = savedTheme;
+    });
 
     // Initial load
     fetchLogs();

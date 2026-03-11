@@ -5,6 +5,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { createWriteStream } = require('fs');
 const { format } = require('date-fns');
+const https = require('https');
 
 // Load transports
 let transports = [];
@@ -27,6 +28,7 @@ let config = {
   enableRemoteLogs: false,
   maxLogFiles: false,   // Default: false (keep unlimited files)
   maxExpireDays: false, // Default: false (never expire by days)
+  discordWebhookUrl: null, // Default: no webhook
 };
 
 // Apply transport configuration
@@ -103,6 +105,52 @@ function log(level, message, meta = {}) {
       console.error('Logging transport error:', e);
     }
   });
+
+  // Trigger webhooks for ERROR level
+  if (level === 'ERROR' && config.discordWebhookUrl) {
+    sendDiscordAlert(entry);
+  }
+}
+
+function sendDiscordAlert(entry) {
+  try {
+    const urlObj = new URL(config.discordWebhookUrl);
+    
+    // Build a nicely formatted Discord embed payload
+    let description = `**Message:** ${entry.message}\n`;
+    if (entry.meta && Object.keys(entry.meta).length > 0) {
+       description += `**Metadata:**\n\`\`\`json\n${JSON.stringify(entry.meta, null, 2).substring(0, 1000)}\n\`\`\`\n`;
+    }
+    if (entry.stack) {
+       description += `**Stack Trace:**\n\`\`\`\n${entry.stack.substring(0, 500)}\n\`\`\``;
+    }
+
+    const payload = JSON.stringify({
+      embeds: [{
+        title: "🚨 LogSphere Critical Error",
+        color: 0xbf616a, // Red color
+        description: description,
+        timestamp: entry.timestamp
+      }]
+    });
+
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const req = https.request(options, (res) => { res.on('data', () => {}); });
+    req.on('error', (e) => console.error("Discord Webhook Failed:", e.message));
+    req.write(payload);
+    req.end();
+  } catch (err) {
+    console.error("Invalid Discord URL or Webhook Error:", err.message);
+  }
 }
 
 function debug(msg, meta) { log('DEBUG', msg, meta); }

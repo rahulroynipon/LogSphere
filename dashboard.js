@@ -49,9 +49,28 @@ function readLogFile(filePath) {
  * Dashboard Router module
  * 
  * Exposes a Web UI dashboard for developers to view structured logs in real-time.
+ *
+ * @param {Object} options Configuration options for dashboard
+ * @param {string} [options.username] Username for Basic Auth
+ * @param {string} [options.password] Password for Basic Auth
  */
-function createDashboardRouter() {
+function createDashboardRouter(options = {}) {
     const router = express.Router();
+
+    // Basic Authentication Middleware
+    if (options.username && options.password) {
+        router.use((req, res, next) => {
+            const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+            const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+            if (login && password && login === options.username && password === options.password) {
+                return next();
+            }
+
+            res.set('WWW-Authenticate', 'Basic realm="LogSphere Secure Dashboard"');
+            res.status(401).send('Authentication required to view logs.');
+        });
+    }
 
     // 1. Serve the HTML Web UI (dashboard/index.html)
     router.get('/', (req, res) => {

@@ -22,6 +22,7 @@ function createExpressLogger(options = {}) {
     logBody: false,
     logQuery: true,
     excludePaths: [],
+    slowRequestThresholdMs: 2000,
     ...options
   };
 
@@ -69,6 +70,9 @@ function createExpressLogger(options = {}) {
         logger.error(`Request Failed: ${req.method} ${req.url}`, new Error(`HTTP ${res.statusCode}`), resInfo);
       } else if (res.statusCode >= 400) {
         logger.warn(`Request Warning: ${req.method} ${req.url}`, resInfo);
+      } else if (duration > config.slowRequestThresholdMs) {
+        // Flag slow queries specifically
+        logger.warn(`Slow Request Detected: ${req.method} ${req.url} took ${duration}ms`, resInfo);
       } else {
         logger.info(`Request Completed: ${req.method} ${req.url}`, resInfo);
       }
