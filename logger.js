@@ -14,6 +14,10 @@ function addTransport(transport) {
   transports.push(transport);
 }
 
+// Load default file transport
+const fileTransport = require('./transports/fileTransport');
+addTransport(fileTransport);
+
 // Load default remote transport
 const remoteTransport = require('./transports/remoteTransport');
 addTransport(remoteTransport);

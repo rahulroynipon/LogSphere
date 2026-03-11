@@ -9,4 +9,7 @@ logger.info('Info message');
 logger.warn('Warning message');
 logger.error('Error occurred', new Error('Test error'));
 
-console.log('Logging done');
+console.log('Logging done. Waiting 2s for async writes...');
+setTimeout(() => {
+  console.log('Exiting');
+}, 2000);
