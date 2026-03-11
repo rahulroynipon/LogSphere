@@ -25,13 +25,20 @@ let config = {
   enableConsoleLogs: true,
   enableFileLogs: true,
   enableRemoteLogs: false,
+  maxLogFiles: false,   // Default: false (keep unlimited files)
+  maxExpireDays: false, // Default: false (never expire by days)
 };
 
 // Apply transport configuration
 function applyTransports() {
   transports = []; // clear existing
   if (config.enableConsoleLogs) addTransport(consoleTransport);
-  if (config.enableFileLogs) addTransport(fileTransport);
+  if (config.enableFileLogs) {
+    if (typeof fileTransport.init === 'function') {
+      fileTransport.init(config);
+    }
+    addTransport(fileTransport);
+  }
   if (config.enableRemoteLogs) addTransport(remoteTransport);
 }
 
