@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogSphere Developer Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪐</text></svg>">
     <script>
         // Apply theme immediately to prevent FOUC (Flash of Unstyled Content)
         (function() {
@@ -256,6 +257,21 @@
             padding: 2rem;
         }
 
+        .action-btn {
+            background: none;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+        }
+        .action-btn:hover {
+            background-color: var(--accent);
+            color: white;
+        }
+
         /* Responsiveness */
         @media (max-width: 850px) {
             header {
@@ -320,6 +336,7 @@
             <option value="dark">🌙 Dark</option>
             <option value="light">☀️ Light</option>
         </select>
+        <button onclick="clearLogs()" title="Delete all logs" style="color: var(--level-error); border-color: var(--level-error);">🗑️ Clear</button>
         <button onclick="exportCSV()" title="Export filtered logs as CSV">📥 CSV</button>
         <button id="liveToggleBtn" onclick="toggleLiveRefresh()" style="border-color: var(--border);">🔴 Auto: OFF</button>
         <button onclick="fetchLogs()">🔄 Refresh</button>
@@ -428,15 +445,23 @@
             delete metaJson.stack;
             delete metaJson.errorMessage;
             
-            let detailsHTML = `<div class="log-details">`;
+            let detailsHTML = `<div class="log-details" onclick="event.stopPropagation()">`;
             if(Object.keys(metaJson).length > 0) {
-                detailsHTML += `<pre>${escapeHtml(JSON.stringify(metaJson, null, 2))}</pre>`;
+                const jsonStr = escapeHtml(JSON.stringify(metaJson, null, 2));
+                const rawJsonStr = escapeHtml(JSON.stringify(metaJson));
+                detailsHTML += `
+                    <button class="action-btn" onclick="copyToClipboard(this, \`${rawJsonStr}\`)">📋 Copy JSON</button>
+                    <pre>${jsonStr}</pre>
+                `;
             } else {
                 detailsHTML += `<div style="color:var(--text-dim); margin-bottom: 1rem;">No metadata attached.</div>`;
             }
             
             if(log.stack) {
-                detailsHTML += `<div class="stack-trace">${escapeHtml(log.stack)}</div>`;
+                detailsHTML += `
+                    <button class="action-btn" style="margin-top: 1rem; border-color: var(--level-error); color: var(--level-error);" onclick="copyToClipboard(this, \`${escapeHtml(log.stack)}\`)">📋 Copy Stack</button>
+                    <div class="stack-trace">${escapeHtml(log.stack)}</div>
+                `;
             }
             
             detailsHTML += `</div>`;
@@ -543,6 +568,52 @@
         link.click();
         document.body.removeChild(link);
     }
+
+    // --- Developer Tools: Copy & Clear ---
+    async function copyToClipboard(btn, text) {
+        try {
+            // Unescape the HTML we escaped earlier for HTML attributes
+            const unescaped = text.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+            await navigator.clipboard.writeText(unescaped);
+            const original = btn.innerText;
+            btn.innerText = "✅ Copied!";
+            setTimeout(() => btn.innerText = original, 2000);
+        } catch (err) {
+            console.error('Failed to copy', err);
+        }
+    }
+
+    async function clearLogs() {
+        if(!confirm("Are you sure you want to permanently delete all log files?")) return;
+        
+        try {
+            const res = await fetch(window.location.pathname + '/api/clear', { method: 'DELETE' });
+            if(!res.ok) throw new Error("Failed to clear logs");
+            
+            // Re-fetch
+            fetchLogs();
+            alert("Logs have been completely cleared.");
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    }
+
+    // Hotkeys
+    document.addEventListener('keydown', (e) => {
+        // Cmd/Ctrl + F to focus search
+        if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+        // Esc to clear search
+        if (e.key === 'Escape') {
+            if (document.activeElement === document.getElementById('searchInput')) {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('searchInput').blur();
+                filterLogs();
+            }
+        }
+    });
 
     // Helper to prevent XSS string injections
     function escapeHtml(unsafe) {

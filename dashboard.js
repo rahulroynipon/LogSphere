@@ -111,6 +111,23 @@ function createDashboardRouter(options = {}) {
         }
     });
 
+    // 3. Build the Clear Logs API
+    router.delete('/api/clear', (req, res) => {
+        try {
+            if (fs.existsSync(LOG_DIR)) {
+                const allFiles = fs.readdirSync(LOG_DIR)
+                                 .filter(f => f.startsWith('log-') && f.endsWith('.log'));
+                for (const file of allFiles) {
+                    fs.unlinkSync(path.join(LOG_DIR, file));
+                }
+            }
+            res.status(200).json({ success: true });
+        } catch (e) {
+            console.error("Failed to clear logs:", e);
+            res.status(500).json({ error: "Failed to clear logs" });
+        }
+    });
+
     return router;
 }
 
