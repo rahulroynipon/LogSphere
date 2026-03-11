@@ -14,6 +14,9 @@ const logger = require('./logger');
  * @returns {Function} Express middleware function.
  */
 function createExpressLogger(options = {}) {
+  // Pass the options to the core logger to configure everything at once
+  logger.configure(options);
+
   const config = {
     logHeaders: false,
     logBody: false,
