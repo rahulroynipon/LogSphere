@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogSphere Developer Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #0f111a;
+            --bg-card: #1a1d27;
+            --bg-input: #232733;
+            --text-main: #f0f0f0;
+            --text-dim: #8b92a5;
+            --accent: #5e81ac;
+            
+            --level-debug: #8b92a5;
+            --level-info: #81a1c1;
+            --level-warn: #ebcb8b;
+            --level-error: #bf616a;
+            
+            --border: #2e3440;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header / Navbar */
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        input, select, button {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--border);
+        }
+
+        /* Main Layout */
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Log List Container */
+        .log-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        /* Individual Log Row */
+        .log-row {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.1s, border-color 0.2s;
+        }
+
+        .log-row:hover {
+            border-color: var(--accent);
+        }
+
+        .log-summary {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Data cells */
+        .log-time {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            min-width: 140px;
+        }
+
+        .log-level {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .log-message {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        .log-reqid {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+
+        /* Expanded Details panel */
+        .log-details {
+            display: none;
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            background-color: #151720;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .log-row.expanded .log-details {
+            display: block;
+        }
+
+        pre {
+            background-color: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            color: #a3be8c;
+            font-family: "Fira Code", "Courier New", Courier, monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .stack-trace {
+            color: var(--level-error);
+            margin-top: 1rem;
+            white-space: pre-wrap;
+        }
+
+        /* Level Specific Colors */
+        .level-DEBUG { color: var(--level-debug); border: 1px solid var(--level-debug); }
+        .level-INFO  { color: var(--level-info); border: 1px solid var(--level-info); }
+        .level-WARN  { color: var(--level-warn); border: 1px solid var(--level-warn); }
+        .level-ERROR { color: var(--level-error); border: 1px solid var(--level-error); background: rgba(191, 97, 106, 0.1); }
+
+        /* Loader */
+        .loader {
+            color: var(--text-dim);
+            text-align: center;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        🪐 LogSphere
+    </div>
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search message, reqId, IP..." onkeyup="filterLogs()">
+        <select id="levelFilter" onchange="filterLogs()">
+            <option value="ALL">All Levels</option>
+            <option value="ERROR">Errors</option>
+            <option value="WARN">Warnings</option>
+            <option value="INFO">Info</option>
+            <option value="DEBUG">Debug</option>
+        </select>
+        <button onclick="fetchLogs()">🔄 Refresh</button>
+    </div>
+</header>
+
+<main>
+    <div class="log-container" id="logContainer">
+        <div class="loader">Loading logs...</div>
+    </div>
+</main>
+
+<script>
+    let rawLogs = [];
+
+    // Fetch logs from the API endpoint
+    async function fetchLogs() {
+        const container = document.getElementById('logContainer');
+        container.innerHTML = '<div class="loader">Refreshing logs...</div>';
+        
+        try {
+            // Dashboard router serves the API at the same base path + /api
+            const res = await fetch(window.location.pathname + '/api');
+            if(!res.ok) throw new Error("Failed to fetch");
+            rawLogs = await res.json();
+            
+            // Sort by newest first
+            rawLogs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+            renderLogs(rawLogs);
+        } catch(e) {
+            container.innerHTML = `<div class="loader" style="color:red">Error loading logs: ${e.message}</div>`;
+        }
+    }
+
+    // Render an array of log objects into the DOM
+    function renderLogs(logs) {
+        const container = document.getElementById('logContainer');
+        container.innerHTML = '';
+        
+        if(logs.length === 0) {
+            container.innerHTML = '<div class="loader">No logs found.</div>';
+            return;
+        }
+
+        logs.forEach(log => {
+            // Summary row
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            
+            // Format time
+            const date = new Date(log.timestamp);
+            const timeStr = `${date.toISOString().split('T')[0]} ${date.toLocaleTimeString()}`;
+            
+            const reqId = log.meta && log.meta.reqId ? log.meta.reqId.split('-')[0]+'...' : '';
+            
+            const summaryHTML = `
+                <div class="log-summary" onclick="this.parentElement.classList.toggle('expanded')">
+                    <div class="log-time">${timeStr}</div>
+                    <div class="log-level level-${log.level}">${log.level}</div>
+                    <div class="log-message">${escapeHtml(log.message)}</div>
+                    <div class="log-reqid">${escapeHtml(reqId)}</div>
+                </div>
+            `;
+            
+            // Build Details
+            let metaJson = { ...log.meta };
+            delete metaJson.stack;
+            delete metaJson.errorMessage;
+            
+            let detailsHTML = `<div class="log-details">`;
+            if(Object.keys(metaJson).length > 0) {
+                detailsHTML += `<pre>${escapeHtml(JSON.stringify(metaJson, null, 2))}</pre>`;
+            } else {
+                detailsHTML += `<div style="color:var(--text-dim); margin-bottom: 1rem;">No metadata attached.</div>`;
+            }
+            
+            if(log.stack) {
+                detailsHTML += `<div class="stack-trace">${escapeHtml(log.stack)}</div>`;
+            }
+            
+            detailsHTML += `</div>`;
+            
+            row.innerHTML = summaryHTML + detailsHTML;
+            container.appendChild(row);
+        });
+    }
+
+    // Apply local search and level filters
+    function filterLogs() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const level = document.getElementById('levelFilter').value;
+        
+        const filtered = rawLogs.filter(log => {
+            // Level match
+            if(level !== 'ALL' && log.level !== level) return false;
+            
+            // Text match
+            if(!query) return true;
+            
+            const textToSearch = (
+                log.message + 
+                log.level + 
+                (log.meta ? JSON.stringify(log.meta) : '')
+            ).toLowerCase();
+            
+            return textToSearch.includes(query);
+        });
+        
+        renderLogs(filtered);
+    }
+
+    // Helper to prevent XSS string injections
+    function escapeHtml(unsafe) {
+        if(!unsafe) return '';
+        return String(unsafe)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // Initial load
+    fetchLogs();
+</script>
+
+</body>
+</html>

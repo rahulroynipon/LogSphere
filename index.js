@@ -6,6 +6,7 @@
 
 const logger = require('./logger');
 const expressLogger = require('./expressLogger');
+const dashboard = require('./dashboard');
 
 // Export the core LogSphere interface
 module.exports = {
@@ -14,6 +15,9 @@ module.exports = {
   
   // The Express configuration middleware
   expressLogger: expressLogger,
+
+  // Developer Web UI Dashboard Router
+  dashboard: dashboard,
 
   // Direct logging methods for easy access, e.g., LogSphere.info("Hello")
   debug: logger.debug,
