@@ -14,17 +14,26 @@ function addTransport(transport) {
   transports.push(transport);
 }
 
-// Load default file transport
+// Load default transports
 const fileTransport = require('./transports/fileTransport');
-addTransport(fileTransport);
-
-// Load default remote transport
 const remoteTransport = require('./transports/remoteTransport');
-addTransport(remoteTransport);
-
-// Load console transport
 const consoleTransport = require('./transports/consoleTransport');
-addTransport(consoleTransport);
+
+// Default Configuration
+let config = {
+  sensitiveKeys: ['password', 'token', 'secret', 'authorization', 'cookie', 'session'],
+  enableConsoleLogs: true,
+  enableFileLogs: true,
+  enableRemoteLogs: false,
+};
+
+// Apply transport configuration
+function applyTransports() {
+  transports = []; // clear existing
+  if (config.enableConsoleLogs) addTransport(consoleTransport);
+  if (config.enableFileLogs) addTransport(fileTransport);
+  if (config.enableRemoteLogs) addTransport(remoteTransport);
+}
 
 // Global error handlers (will be attached when logger is initialized)
 function attachGlobalHandlers() {
@@ -38,9 +47,6 @@ function attachGlobalHandlers() {
   });
 }
 
-// Configuration for redaction
-const SENSITIVE_KEYS = ['password', 'token', 'secret', 'authorization', 'cookie', 'session'];
-
 function redact(obj) {
   if (obj === null || typeof obj !== 'object') {
     return obj;
@@ -50,7 +56,7 @@ function redact(obj) {
   }
   const redactedObj = {};
   for (const [key, value] of Object.entries(obj)) {
-    if (SENSITIVE_KEYS.includes(key.toLowerCase())) {
+    if (config.sensitiveKeys.includes(key.toLowerCase())) {
       redactedObj[key] = '[REDACTED]';
     } else if (typeof value === 'object') {
       redactedObj[key] = redact(value);
@@ -101,17 +107,27 @@ function error(msg, err, meta = {}) {
   log('ERROR', msg, enriched);
 }
 
-// Initialize logger (add default transports and attach handlers)
-function initLogger() {
-  // Ensure default transports are added (already added above)
+// Configure logger dynamically
+function configure(options = {}) {
+  config = { ...config, ...options };
+  
+  // Format sensitive keys to lowercase for case-insensitive matching
+  if (config.sensitiveKeys) {
+    config.sensitiveKeys = config.sensitiveKeys.map(k => k.toLowerCase());
+  }
+
+  applyTransports();
   attachGlobalHandlers();
 }
+
+// Auto-initialize with defaults on require
+applyTransports();
 
 // Exported Logger API
 module.exports = {
   addTransport,
   attachGlobalHandlers,
-  initLogger,
+  configure,
   debug,
   info,
   warn,
