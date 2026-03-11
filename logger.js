@@ -22,6 +22,10 @@ addTransport(fileTransport);
 const remoteTransport = require('./transports/remoteTransport');
 addTransport(remoteTransport);
 
+// Load console transport
+const consoleTransport = require('./transports/consoleTransport');
+addTransport(consoleTransport);
+
 // Global error handlers (will be attached when logger is initialized)
 function attachGlobalHandlers() {
   process.on('uncaughtException', (err) => {
@@ -34,14 +38,39 @@ function attachGlobalHandlers() {
   });
 }
 
+// Configuration for redaction
+const SENSITIVE_KEYS = ['password', 'token', 'secret', 'authorization', 'cookie', 'session'];
+
+function redact(obj) {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(redact);
+  }
+  const redactedObj = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (SENSITIVE_KEYS.includes(key.toLowerCase())) {
+      redactedObj[key] = '[REDACTED]';
+    } else if (typeof value === 'object') {
+      redactedObj[key] = redact(value);
+    } else {
+      redactedObj[key] = value;
+    }
+  }
+  return redactedObj;
+}
+
 // Helper to build log entry
 function buildEntry(level, message, meta = {}) {
   const timestamp = new Date().toISOString();
+  
+  // Create a base entry
   const entry = {
     timestamp,
     level,
     message,
-    meta,
+    meta: redact(meta), // Redact sensitive info in meta
   };
   if (meta && meta.stack) {
     entry.stack = meta.stack;
