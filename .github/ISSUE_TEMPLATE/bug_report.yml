@@ -1,0 +1,49 @@
+name: Bug Report
+description: File a report to help us improve LogSphere
+title: "[BUG] <title>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us what you expected to happen
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction Steps
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Setup LogSphere...
+        2. Run...
+        3. See error...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: LogSphere Version
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      placeholder: e.g. 18.x
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other

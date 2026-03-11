@@ -1,0 +1,17 @@
+# Exclude local logs
+logs/
+
+# Exclude development/testing files
+test_final.js
+tmp.json
+start_dashboard.js
+.git/
+.gitignore
+
+# Exclude IDE/AI configs
+.gemini/
+.vscode/
+
+# Ignore documentation sources if any (we have README)
+*.log
+coverage/

@@ -1,8 +1,9 @@
 {
   "name": "logsphere",
   "version": "1.0.0",
-  "description": "",
-  "main": "logger.js",
+  "description": "A ready-to-use, professional Node.js logging system with a built-in web dashboard, log rotation, sensitive data redaction, and beautiful console output.",
+  "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,10 +11,22 @@
     "type": "git",
     "url": "git+https://github.com/rahulroynipon/LogSphere.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "keywords": [
+    "logger",
+    "logging",
+    "express",
+    "middleware",
+    "dashboard",
+    "rotating-logs",
+    "monitoring",
+    "structured-logging"
+  ],
+  "author": {
+    "name": "Rahul Roy Nipon",
+    "email": "rahulroynipon@gmail.com",
+    "url": "https://github.com/rahulroynipon"
+  },
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/rahulroynipon/LogSphere/issues"
   },
@@ -23,5 +36,13 @@
     "express": "^5.2.1",
     "uuid": "^13.0.0"
   },
-  "types": "index.d.ts"
+  "files": [
+    "index.js",
+    "logger.js",
+    "expressLogger.js",
+    "dashboard.js",
+    "index.d.ts",
+    "dashboard/",
+    "transports/"
+  ]
 }

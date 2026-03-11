@@ -1,6 +1,10 @@
 // expressLogger.js - Configurable Express middleware for logging requests
 
 const { v4: uuidv4 } = require('uuid');
+/**
+ * LogSphere - Express Middleware
+ * @author Rahul Roy Nipon <rahulroynipon@gmail.com>
+ */
 const logger = require('./logger');
 
 /**

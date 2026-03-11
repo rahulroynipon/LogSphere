@@ -4,6 +4,13 @@
  * Simply require this module and use it instantly, or configure it explicitly.
  */
 
+/**
+ * LogSphere - Professional Node.js Logging System
+ * 
+ * @author Rahul Roy Nipon <rahulroynipon@gmail.com>
+ * @license MIT
+ */
+
 const logger = require('./logger');
 const expressLogger = require('./expressLogger');
 const dashboard = require('./dashboard');
