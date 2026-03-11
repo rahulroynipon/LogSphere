@@ -3,8 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-// Configuration
-const LOG_DIR = path.resolve(__dirname, 'logs');
+// Dashboard logic
 
 /**
  * Parses a single JSON log line safely
@@ -53,9 +52,13 @@ function readLogFile(filePath) {
  * @param {Object} options Configuration options for dashboard
  * @param {string} [options.username] Username for Basic Auth
  * @param {string} [options.password] Password for Basic Auth
+ * @param {string} [options.logDir] Custom path to the log directory
  */
 function createDashboardRouter(options = {}) {
     const router = express.Router();
+    
+    // Default to the project root logs folder, or use the configured path
+    const LOG_DIR = options.logDir || path.join(process.cwd(), 'logs');
 
     // Basic Authentication Middleware
     if (options.username && options.password) {

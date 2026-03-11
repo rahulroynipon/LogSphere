@@ -31,6 +31,7 @@ function createExpressLogger(options = {}) {
     const reqId = uuidv4();
     req.id = reqId;
     res.locals.reqId = reqId;
+    res.setHeader('X-Request-Id', reqId);
 
     if (config.excludePaths.includes(req.path)) {
       return next();

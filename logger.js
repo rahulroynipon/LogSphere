@@ -29,6 +29,7 @@ let config = {
   maxLogFiles: false,   // Default: false (keep unlimited files)
   maxExpireDays: false, // Default: false (never expire by days)
   discordWebhookUrl: null, // Default: no webhook
+  logDir: path.join(process.cwd(), 'logs'), // Set default log location relative to project root
 };
 
 // Apply transport configuration

@@ -6,7 +6,7 @@ const zlib = require('zlib');
 const { format } = require('date-fns');
 
 // Configuration
-const LOG_DIR = path.resolve(__dirname, '..', 'logs');
+let LOG_DIR = path.join(process.cwd(), 'logs');
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 // Retain logs forever by default, unless configured otherwise
@@ -17,12 +17,13 @@ function init(config) {
   if (config) {
     if (config.maxLogFiles !== undefined) maxLogFiles = config.maxLogFiles;
     if (config.maxExpireDays !== undefined) maxExpireDays = config.maxExpireDays;
+    if (config.logDir) LOG_DIR = config.logDir;
   }
-}
-
-// Ensure log directory exists
-if (!fs.existsSync(LOG_DIR)) {
-  fs.mkdirSync(LOG_DIR, { recursive: true });
+  
+  // Ensure log directory exists
+  if (!fs.existsSync(LOG_DIR)) {
+    fs.mkdirSync(LOG_DIR, { recursive: true });
+  }
 }
 
 let currentStream = null;
