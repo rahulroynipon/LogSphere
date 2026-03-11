@@ -4,25 +4,47 @@ First off, thank you for considering contributing to LogSphere! It's people like
 
 ## 🌈 How Can I Contribute?
 
-### Reporting Bugs
+### 🐞 Reporting Bugs
 - Use the [GitHub issue tracker](https://github.com/rahulroynipon/LogSphere/issues).
-- Describe the bug in detail, including steps to reproduce.
-- Include your Node.js version and OS.
+- We provide a **Bug Report Template**—please fill it out completely to help us fix the issue faster.
+- Include your Node.js version, LogSphere version, and OS.
 
-### Suggesting Enhancements
-- Check if the feature has already been suggested.
-- Open an issue and describe the feature, why it would be useful, and how it might work.
+### 💡 Suggesting Enhancements
+- Check if the feature has already been suggested in the [Issues](https://github.com/rahulroynipon/LogSphere/issues) tab.
+- Use our **Feature Request Template** to describe your proposal, why it's needed, and how it should work.
+
+---
+
+## 🏗️ Project Structure
+
+To help you navigate the codebase, here is a quick overview:
+
+```text
+LogSphere/
+├── dashboard/           # Web Dashboard frontend files
+│   ├── assets/          # Images for documentation
+│   └── index.html       # Single-page Dashboard UI (Vanilla HTML/JS)
+├── transports/          # Different output methods
+│   ├── consoleTransport.js  # Beautiful CLI output
+│   ├── fileTransport.js     # Rotating log file logic
+│   └── remoteTransport.js   # HTTP/Webhook alerting (Discord)
+├── .github/             # GitHub workflow & issue templates
+├── index.js             # Main package entry point
+├── logger.js            # Core logging engine & configuration
+├── expressLogger.js     # Middleware for Express.js
+├── dashboard.js         # Backend router for the Dashboard
+├── index.d.ts           # TypeScript type definitions
+├── CHANGELOG.md         # History of all version changes
+└── README.md            # Main documentation
+```
 
 ### Pull Requests
 1. **Fork the repository** and create your branch from `main`.
-2. **Setup your environment**:
-   ```bash
-   npm install
-   ```
-3. **Make your changes**. If you're adding a feature, please include a test script.
-4. **Run tests**: Ensure your changes don't break existing functionality.
-5. **Lint your code**: Follow the existing code style (standard JS).
-6. **Submit a Pull Request** with a clear description of what you've done.
+2. **Setup your environment** (see [Development Setup](#development-setup)).
+3. **Commit Messages**: Use clear, descriptive commit messages (e.g., `feat: add Slack notification support`).
+4. **Make your changes**. If adding a feature, please include a test case.
+5. **Run tests**: Ensure your changes don't break existing functionality.
+6. **Submit a Pull Request** with a clear description and link to any related issues.
 
 ## 🏗️ Development Setup
 
