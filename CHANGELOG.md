@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-03-14
+
+### Added
+- **Premium Dashboard UI**: Redesigned header with glassmorphism effects and better layout.
+- **Smart Filter Persistence**: Dashboard filters now stay active during auto-refreshes.
+- **Custom Modals**: Replaced native browser alerts with premium modals for Login, Logout, and Clear Logs.
+- **Route Exclusion**: Added `excludePaths` option to `expressLogger` to skip noisy routes.
+- **Log Level Threshold**: Added `minLevel` configuration to filter log volume globally.
+- **Improved UI Elements**: Enhanced button styles, better spacing, and responsive header.
+- **Enhanced Reliability**: Dashboard now automatically suppresses internal recursive logging.
+
 ## [1.0.0] - 2026-03-12
 
 ### Added
