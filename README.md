@@ -16,7 +16,9 @@
 - 🐌 **Performance Metrics**: Identifies slow requests automatically.
 - 🔔 **Alerting**: Built-in support for Discord webhooks on critical errors.
 - 📦 **NPM Ready**: Fully typed with TypeScript support.
-- 🎨 **Beautiful UI**: Dark mode, light mode, and system theme support.
+- 🎨 **Premium UI**: Modern glassmorphism dashboard with dark, light, and system theme support.
+- 🌫️ **Smart Filtering**: Advanced, persistent filters that stay active during auto-refreshes.
+- 🚫 **Path Exclusion**: Programmatically exclude noisy routes (like assets or health checks) from logs.
 
 ---
 
@@ -92,7 +94,38 @@ LogSphere is highly configurable via `LogSphere.configure()` or directly inside 
 | `maxExpireDays` | `number` | `false` | Number of days to keep logs (deleted if older). |
 | `discordWebhookUrl` | `string` | `null` | Discord URL to send critical error alerts. |
 | `slowRequestThresholdMs` | `number` | `2000` | Threshold to flag and log slow requests. |
+| `excludePaths` | `string[]` | `[]` | Paths (and their prefixes) to exclude from `expressLogger`. |
+| `minLevel` | `string` | `'DEBUG'` | Minimum log level to capture (`DEBUG`, `INFO`, `WARN`, `ERROR`). |
 | `enableConsoleLogs` | `boolean` | `true` | Enable/Disable beautiful console output. |
+
+---
+
+## 🌍 Environment Setup
+
+Configure LogSphere differently based on your environment for the best experience.
+
+### 🛠️ Development Mode
+Capture everything for easy debugging.
+
+```javascript
+LogSphere.configure({
+  minLevel: 'DEBUG',       // See every detail
+  enableConsoleLogs: true, // Beautiful terminal output
+  logBody: true            // Log full request bodies
+});
+```
+
+### 🚀 Production Mode
+Keep logs clean and performant.
+
+```javascript
+LogSphere.configure({
+  minLevel: 'INFO',              // Ignore technical debug noise
+  enableConsoleLogs: false,      // Better performance in prod
+  maxExpireDays: 30,             // Auto-delete logs after a month
+  discordWebhookUrl: 'https://...' // Get alerts for ERRORs
+});
+```
 
 ---
 
@@ -100,12 +133,24 @@ LogSphere is highly configurable via `LogSphere.configure()` or directly inside 
 
 Accessed via the route where you mount `LogSphere.dashboard()`, the UI provides:
 
-- **Live Tailing**: Toggle "Auto Refresh" to see logs stream in real-time.
-- **Advanced Search**: Filter by message, request ID, IP, or level.
-- **Date Filtering**: Narrow down logs by specific date ranges.
-- **Exporting**: One-click "CSV Export" for your filtered results.
-- **Management**: One-click "Clear Logs" to reset your dev environment.
-- **Expandable Details**: Click any log to see formatted JSON metadata and stack traces.
+- **Live Tailing**: Toggle "Auto Refresh" to stream logs. Filters stay active during updates!
+- **Advanced Search**: Case-insensitive filtering by message, request ID, IP, or log level.
+- **Date Filtering**: Precision range filters with instant UI state updates.
+- **Exporting**: One-click "CSV Export" for current filtered results.
+- **Premium Modals**: Secure login, logout, and clearing actions using a modern modal system.
+- **Expandable Details**: Click any log for deep-dive JSON analysis and formatted stack traces.
+
+---
+
+## 🚫 Excluding Routes
+To keep your logs clean, you can exclude specific routes or entire path prefixes:
+
+```javascript
+app.use(LogSphere.expressLogger({
+  excludePaths: ['/logs', '/static', '/health-check']
+}));
+```
+> **Note**: LogSphere automatically suppresses logging for its own internal dashboard APIs to prevent feedback loops.
 
 ---
 

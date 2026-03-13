@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogSphere Developer Dashboard</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪐</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪐</text></svg>">
     <script>
         // Apply theme immediately to prevent FOUC (Flash of Unstyled Content)
-        (function() {
+        (function () {
             const savedTheme = localStorage.getItem('LogSphereTheme') || 'system';
             function applyTheme(theme) {
                 if (theme === 'system') {
@@ -18,7 +20,7 @@
                 }
             }
             applyTheme(savedTheme);
-            
+
             // Listen for system theme changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
                 if ((localStorage.getItem('LogSphereTheme') || 'system') === 'system') {
@@ -28,7 +30,8 @@
         })();
     </script>
     <style>
-        :root, :root[data-theme="dark"] {
+        :root,
+        :root[data-theme="dark"] {
             --bg-dark: #0f111a;
             --bg-card: #1a1d27;
             --bg-input: #232733;
@@ -37,13 +40,14 @@
             --text-dim: #8b92a5;
             --accent: #5e81ac;
             --pre-color: #a3be8c;
-            
+
             --level-debug: #8b92a5;
             --level-info: #81a1c1;
             --level-warn: #ebcb8b;
             --level-error: #bf616a;
-            
+
             --border: #2e3440;
+            --modal-overlay: rgba(15, 17, 26, 0.85);
         }
 
         :root[data-theme="light"] {
@@ -55,13 +59,14 @@
             --text-dim: #6b7280;
             --accent: #3b82f6;
             --pre-color: #059669;
-            
+
             --level-debug: #6b7280;
             --level-info: #2563eb;
             --level-warn: #d97706;
             --level-error: #dc2626;
-            
+
             --border: #e5e7eb;
+            --modal-overlay: rgba(240, 242, 245, 0.85);
         }
 
         * {
@@ -87,8 +92,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap; /* Allows wrapping on medium screens */
-            gap: 1rem; /* Fixes gap when wrapped */
+            flex-wrap: wrap;
+            /* Allows wrapping on medium screens */
+            gap: 1rem;
+            /* Fixes gap when wrapped */
         }
 
         .logo {
@@ -105,7 +112,9 @@
             gap: 10px;
         }
 
-        input, select, button {
+        input,
+        select,
+        button {
             background-color: var(--bg-input);
             border: 1px solid var(--border);
             color: var(--text-main);
@@ -117,7 +126,8 @@
             box-sizing: border-box;
         }
 
-        input:focus, select:focus {
+        input:focus,
+        select:focus {
             border-color: var(--accent);
         }
 
@@ -153,6 +163,130 @@
             padding: 1rem 2rem;
             background-color: var(--bg-card);
             border-top: 1px solid var(--border);
+        }
+
+        /* Login & Logout Modal Styles */
+        #loginOverlay,
+        #logoutOverlay,
+        #clearOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .login-modal,
+        .logout-modal,
+        .clear-modal {
+            background: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .login-modal h2,
+        .logout-modal h2,
+        .clear-modal h2 {
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .login-modal p,
+        .logout-modal p,
+        .clear-modal p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .login-form-group {
+            text-align: left;
+            margin-bottom: 1.2rem;
+        }
+
+        .login-form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        .login-modal input {
+            width: 100% !important;
+            padding: 0.8rem 1rem !important;
+            border-radius: 8px !important;
+        }
+
+        .login-modal button,
+        .logout-button-primary {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .logout-button-secondary {
+            width: 100%;
+            padding: 0.9rem;
+            background: none;
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-button-secondary:hover {
+            border-color: var(--text-dim);
+            color: var(--text-main);
+        }
+
+        .login-modal button:hover,
+        .logout-button-primary:hover {
+            opacity: 0.9;
+        }
+
+        .login-error {
+            color: var(--level-error);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .pagination span {
@@ -245,10 +379,26 @@
         }
 
         /* Level Specific Colors */
-        .level-DEBUG { color: var(--level-debug); border: 1px solid var(--level-debug); }
-        .level-INFO  { color: var(--level-info); border: 1px solid var(--level-info); }
-        .level-WARN  { color: var(--level-warn); border: 1px solid var(--level-warn); }
-        .level-ERROR { color: var(--level-error); border: 1px solid var(--level-error); background: rgba(191, 97, 106, 0.1); }
+        .level-DEBUG {
+            color: var(--level-debug);
+            border: 1px solid var(--level-debug);
+        }
+
+        .level-INFO {
+            color: var(--level-info);
+            border: 1px solid var(--level-info);
+        }
+
+        .level-WARN {
+            color: var(--level-warn);
+            border: 1px solid var(--level-warn);
+        }
+
+        .level-ERROR {
+            color: var(--level-error);
+            border: 1px solid var(--level-error);
+            background: rgba(191, 97, 106, 0.1);
+        }
 
         /* Loader */
         .loader {
@@ -267,6 +417,7 @@
             cursor: pointer;
             margin-bottom: 0.5rem;
         }
+
         .action-btn:hover {
             background-color: var(--accent);
             color: white;
@@ -280,159 +431,242 @@
                 padding: 1rem;
                 gap: 1rem;
             }
+
             .controls {
                 flex-wrap: wrap;
             }
-            .controls > * {
+
+            .controls>* {
                 flex: 1 1 calc(33% - 10px);
             }
+
             #searchInput {
                 flex: 1 1 100%;
             }
+
             .log-summary {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 0.5rem;
             }
+
             .log-time {
                 min-width: auto;
             }
+
             .log-message {
                 width: 100%;
                 white-space: normal;
                 word-wrap: break-word;
             }
+
             .log-reqid {
                 align-self: flex-start;
             }
         }
-        
+
         @media (max-width: 500px) {
-            .controls > * {
+            .controls>* {
                 flex: 1 1 100%;
             }
         }
     </style>
 </head>
+
 <body>
 
-<header>
-    <div class="logo">
-        🪐 LogSphere
-    </div>
-    <div class="controls">
-        <input type="text" id="searchInput" placeholder="Search message, reqId, IP..." onkeyup="filterLogs()">
-        <input type="date" id="dateFrom" title="From Date" onchange="filterLogs()">
-        <input type="date" id="dateTo" title="To Date" onchange="filterLogs()">
-        <select id="levelFilter" title="Level" onchange="filterLogs()">
-            <option value="ALL">All Levels</option>
-            <option value="ERROR">Errors</option>
-            <option value="WARN">Warnings</option>
-            <option value="INFO">Info</option>
-            <option value="DEBUG">Debug</option>
-        </select>
-        <select id="themeFilter" title="Theme" onchange="changeTheme()">
-            <option value="system">🖥️ System</option>
-            <option value="dark">🌙 Dark</option>
-            <option value="light">☀️ Light</option>
-        </select>
-        <button onclick="clearLogs()" title="Delete all logs" style="color: var(--level-error); border-color: var(--level-error);">🗑️ Clear</button>
-        <button onclick="exportCSV()" title="Export filtered logs as CSV">📥 CSV</button>
-        <button id="liveToggleBtn" onclick="toggleLiveRefresh()" style="border-color: var(--border);">🔴 Auto: OFF</button>
-        <button onclick="fetchLogs()">🔄 Refresh</button>
-        <button onclick="logout()" title="Logout from dashboard" style="border-color: var(--text-dim); color: var(--text-dim);">🚪 Logout</button>
-    </div>
-</header>
-
-<main>
-    <div class="log-container" id="logContainer">
-        <div class="loader">Loading logs...</div>
-    </div>
-    <div class="pagination" id="paginationControls" style="display: none;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <select id="limitSelect" title="Rows per page" onchange="changeLimit()" style="padding: 0.3rem; font-size: 0.8rem;">
-                <option value="50">50</option>
-                <option value="100" selected>100</option>
-                <option value="250">250</option>
-                <option value="500">500</option>
+    <header>
+        <div class="logo">
+            🪐 LogSphere
+        </div>
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Search message, reqId, IP..." onkeyup="filterLogs()">
+            <input type="date" id="dateFrom" title="From Date" onchange="filterLogs()">
+            <input type="date" id="dateTo" title="To Date" onchange="filterLogs()">
+            <select id="levelFilter" title="Level" onchange="filterLogs()">
+                <option value="ALL">All Levels</option>
+                <option value="ERROR">Errors</option>
+                <option value="WARN">Warnings</option>
+                <option value="INFO">Info</option>
+                <option value="DEBUG">Debug</option>
             </select>
-            <span id="pageInfo">Page 1 of 1</span>
+            <select id="themeFilter" title="Theme" onchange="changeTheme()">
+                <option value="system">🖥️ System</option>
+                <option value="dark">🌙 Dark</option>
+                <option value="light">☀️ Light</option>
+            </select>
+            <button onclick="clearLogs()" title="Delete all logs"
+                style="color: var(--level-error); border-color: var(--level-error);">🗑️ Clear</button>
+            <button onclick="exportCSV()" title="Export filtered logs as CSV">📥 CSV</button>
+            <button id="liveToggleBtn" onclick="toggleLiveRefresh()" style="border-color: var(--border);">🔴 Auto:
+                OFF</button>
+            <button onclick="fetchLogs()">🔄 Refresh</button>
+            <button onclick="logout()" title="Logout from dashboard"
+                style="border-color: var(--text-dim); color: var(--text-dim);">🚪 Logout</button>
         </div>
-        <div style="display: flex; gap: 5px;">
-            <button id="prevBtn" onclick="changePage(-1)">Previous</button>
-            <button id="nextBtn" onclick="changePage(1)">Next</button>
+    </header>
+
+    <main>
+        <div class="log-container" id="logContainer">
+            <div class="loader">Loading logs...</div>
+        </div>
+        <div class="pagination" id="paginationControls" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <select id="limitSelect" title="Rows per page" onchange="changeLimit()"
+                    style="padding: 0.3rem; font-size: 0.8rem;">
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                    <option value="250">250</option>
+                    <option value="500">500</option>
+                </select>
+                <span id="pageInfo">Page 1 of 1</span>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button id="prevBtn" onclick="changePage(-1)">Previous</button>
+                <button id="nextBtn" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Login Modal Overlay -->
+    <div id="loginOverlay">
+        <div class="login-modal">
+            <div class="logo" style="justify-content: center; margin-bottom: 1rem;">
+                <span>🪐</span> LogSphere
+            </div>
+            <h2>Unlock Dashboard</h2>
+            <p>Enter your credentials to access logs</p>
+
+            <div id="loginError" class="login-error">Invalid username or password</div>
+
+            <form id="loginForm">
+                <div class="login-form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="admin" required>
+                </div>
+                <div class="login-form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit">Unlock Now</button>
+            </form>
         </div>
     </div>
-</main>
 
-<script>
-    let rawLogs = [];
-    let currentFilteredLogs = [];
-    let currentPage = 1;
-    let logsPerPage = 100;
+    <!-- Logout Modal Overlay -->
+    <div id="logoutOverlay">
+        <div class="logout-modal">
+            <div class="logo" style="justify-content: center; margin: -10px 0 1rem 0;">
+                <span style="font-size: 2.5rem;">🚪</span>
+            </div>
+            <h2>Confirm Logout</h2>
+            <p>Are you sure you want to exit the dashboard? You will need to log in again to access logs.</p>
 
-    // Fetch logs from the API endpoint
-    async function fetchLogs() {
-        const container = document.getElementById('logContainer');
-        container.innerHTML = '<div class="loader">Refreshing logs...</div>';
-        
-        try {
-            // Dashboard router serves the API at the same base path + /api
-            const res = await fetch(window.location.pathname + '/api');
-            if(!res.ok) throw new Error("Failed to fetch");
-            rawLogs = await res.json();
-            
-            // Sort by newest first
-            rawLogs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-            currentFilteredLogs = rawLogs;
-            currentPage = 1;
-            renderLogs();
-        } catch(e) {
-            container.innerHTML = `<div class="loader" style="color:red">Error loading logs: ${e.message}</div>`;
+            <button class="logout-button-primary" onclick="confirmLogout()">Yes, Logout</button>
+            <button class="logout-button-secondary" onclick="hideLogoutModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Clear Logs Modal Overlay -->
+    <div id="clearOverlay">
+        <div class="clear-modal">
+            <div class="logo" style="justify-content: center; margin: -10px 0 1rem 0;">
+                <span style="font-size: 2.5rem;">🗑️</span>
+            </div>
+            <h2>Clear All Logs?</h2>
+            <p>This will permanently delete all stored log files. This action cannot be undone.</p>
+
+            <button class="logout-button-primary" style="background: var(--level-error);" onclick="confirmClear()">Yes, Delete All</button>
+            <button class="logout-button-secondary" onclick="hideClearModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let rawLogs = [];
+        let currentFilteredLogs = [];
+        let currentPage = 1;
+        let logsPerPage = 100;
+
+        // Helper to get correct API URL regardless of trailing slashes
+        function getApiUrl(endpoint) {
+            let path = window.location.pathname;
+            if (!path.endsWith('/')) path += '/';
+            // Remove leading slash from endpoint if present
+            const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+            return path + cleanEndpoint;
         }
-    }
 
-    // Render logs with pagination
-    function renderLogs() {
-        const container = document.getElementById('logContainer');
-        const paginationControls = document.getElementById('paginationControls');
-        const pageInfo = document.getElementById('pageInfo');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        
-        container.innerHTML = '';
-        
-        if(currentFilteredLogs.length === 0) {
-            container.innerHTML = '<div class="loader">No logs found.</div>';
-            paginationControls.style.display = 'none';
-            return;
+        // Fetch logs from the API endpoint
+        async function fetchLogs(isSilent = false) {
+            const container = document.getElementById('logContainer');
+            if (!isSilent) container.innerHTML = '<div class="loader">Refreshing logs...</div>';
+
+            try {
+                const res = await fetch(getApiUrl('api'));
+
+                if (res.status === 401) {
+                    showLoginModal();
+                    return;
+                }
+
+                if (!res.ok) throw new Error("Failed to fetch");
+
+                // Hide modal if fetch succeeds
+                hideLoginModal();
+
+                rawLogs = await res.json();
+
+                // Sort by newest first
+                rawLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                // Re-apply current filters to the new rawLogs
+                filterLogs(isSilent); // Preserve page if it's a silent background refresh
+            } catch (e) {
+                if (!isSilent) container.innerHTML = `<div class="loader" style="color:red">Error loading logs: ${e.message}</div>`;
+            }
         }
 
-        const totalPages = Math.ceil(currentFilteredLogs.length / logsPerPage);
-        if (currentPage < 1) currentPage = 1;
-        if (currentPage > totalPages) currentPage = totalPages;
+        // Render logs with pagination
+        function renderLogs() {
+            const container = document.getElementById('logContainer');
+            const paginationControls = document.getElementById('paginationControls');
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
 
-        paginationControls.style.display = 'flex';
-        pageInfo.innerText = `Page ${currentPage} of ${totalPages} (${currentFilteredLogs.length} total logs)`;
-        prevBtn.disabled = currentPage === 1;
-        nextBtn.disabled = currentPage === totalPages;
+            container.innerHTML = '';
 
-        const startIndex = (currentPage - 1) * logsPerPage;
-        const endIndex = startIndex + logsPerPage;
-        const logsToDisplay = currentFilteredLogs.slice(startIndex, endIndex);
+            if (currentFilteredLogs.length === 0) {
+                container.innerHTML = '<div class="loader">No logs found.</div>';
+                paginationControls.style.display = 'none';
+                return;
+            }
 
-        logsToDisplay.forEach(log => {
-            // Summary row
-            const row = document.createElement('div');
-            row.className = 'log-row';
-            
-            // Format time
-            const date = new Date(log.timestamp);
-            const timeStr = `${date.toISOString().split('T')[0]} ${date.toLocaleTimeString()}`;
-            
-            const reqId = log.meta && log.meta.reqId ? log.meta.reqId.split('-')[0]+'...' : '';
-            
-            const summaryHTML = `
+            const totalPages = Math.ceil(currentFilteredLogs.length / logsPerPage);
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            paginationControls.style.display = 'flex';
+            pageInfo.innerText = `Page ${currentPage} of ${totalPages} (${currentFilteredLogs.length} total logs)`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+
+            const startIndex = (currentPage - 1) * logsPerPage;
+            const endIndex = startIndex + logsPerPage;
+            const logsToDisplay = currentFilteredLogs.slice(startIndex, endIndex);
+
+            logsToDisplay.forEach(log => {
+                // Summary row
+                const row = document.createElement('div');
+                row.className = 'log-row';
+
+                // Format time
+                const date = new Date(log.timestamp);
+                const timeStr = `${date.toISOString().split('T')[0]} ${date.toLocaleTimeString()}`;
+
+                const reqId = log.meta && log.meta.reqId ? log.meta.reqId.split('-')[0] + '...' : '';
+
+                const summaryHTML = `
                 <div class="log-summary" onclick="this.parentElement.classList.toggle('expanded')">
                     <div class="log-time">${timeStr}</div>
                     <div class="log-level level-${log.level}">${log.level}</div>
@@ -440,224 +674,290 @@
                     <div class="log-reqid">${escapeHtml(reqId)}</div>
                 </div>
             `;
-            
-            // Build Details
-            let metaJson = { ...log.meta };
-            delete metaJson.stack;
-            delete metaJson.errorMessage;
-            
-            let detailsHTML = `<div class="log-details" onclick="event.stopPropagation()">`;
-            if(Object.keys(metaJson).length > 0) {
-                const jsonStr = escapeHtml(JSON.stringify(metaJson, null, 2));
-                const rawJsonStr = escapeHtml(JSON.stringify(metaJson));
-                detailsHTML += `
+
+                // Build Details
+                let metaJson = { ...log.meta };
+                delete metaJson.stack;
+                delete metaJson.errorMessage;
+
+                let detailsHTML = `<div class="log-details" onclick="event.stopPropagation()">`;
+                if (Object.keys(metaJson).length > 0) {
+                    const jsonStr = escapeHtml(JSON.stringify(metaJson, null, 2));
+                    const rawJsonStr = escapeHtml(JSON.stringify(metaJson));
+                    detailsHTML += `
                     <button class="action-btn" onclick="copyToClipboard(this, \`${rawJsonStr}\`)">📋 Copy JSON</button>
                     <pre>${jsonStr}</pre>
                 `;
-            } else {
-                detailsHTML += `<div style="color:var(--text-dim); margin-bottom: 1rem;">No metadata attached.</div>`;
-            }
-            
-            if(log.stack) {
-                detailsHTML += `
+                } else {
+                    detailsHTML += `<div style="color:var(--text-dim); margin-bottom: 1rem;">No metadata attached.</div>`;
+                }
+
+                if (log.stack) {
+                    detailsHTML += `
                     <button class="action-btn" style="margin-top: 1rem; border-color: var(--level-error); color: var(--level-error);" onclick="copyToClipboard(this, \`${escapeHtml(log.stack)}\`)">📋 Copy Stack</button>
                     <div class="stack-trace">${escapeHtml(log.stack)}</div>
                 `;
+                }
+
+                detailsHTML += `</div>`;
+
+                row.innerHTML = summaryHTML + detailsHTML;
+                container.appendChild(row);
+            });
+        }
+
+        function filterLogs(keepPage = false) {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const level = document.getElementById('levelFilter').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+
+            currentFilteredLogs = rawLogs.filter(log => {
+                // Level match
+                if (level !== 'ALL' && log.level !== level) return false;
+
+                // Date match (Using YYYY-MM-DD string comparison for exact day matching)
+                if (log.timestamp) {
+                    const logDate = log.timestamp.split('T')[0];
+                    if (dateFrom && logDate < dateFrom) return false;
+                    if (dateTo && logDate > dateTo) return false;
+                }
+
+                // Text match
+                if (!query) return true;
+
+                const textToSearch = (
+                    log.message +
+                    log.level +
+                    (log.meta ? JSON.stringify(log.meta) : '')
+                ).toLowerCase();
+
+                return textToSearch.includes(query);
+            });
+
+            // Reset to first page on direct filter interaction, 
+            // but keep it on background refreshes if possible
+            if (!keepPage) {
+                currentPage = 1;
             }
-            
-            detailsHTML += `</div>`;
-            
-            row.innerHTML = summaryHTML + detailsHTML;
-            container.appendChild(row);
-        });
-    }
+            renderLogs();
+        }
 
-    function filterLogs() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const level = document.getElementById('levelFilter').value;
-        const dateFrom = document.getElementById('dateFrom').value;
-        const dateTo = document.getElementById('dateTo').value;
-        
-        currentFilteredLogs = rawLogs.filter(log => {
-            // Level match
-            if(level !== 'ALL' && log.level !== level) return false;
-            
-            // Date match (Using YYYY-MM-DD string comparison for exact day matching)
-            if(log.timestamp) {
-                const logDate = log.timestamp.split('T')[0];
-                if(dateFrom && logDate < dateFrom) return false;
-                if(dateTo && logDate > dateTo) return false;
+        function changePage(delta) {
+            currentPage += delta;
+            renderLogs();
+            // Scroll back to top of container
+            document.getElementById('logContainer').scrollTop = 0;
+        }
+
+        function changeLimit() {
+            logsPerPage = parseInt(document.getElementById('limitSelect').value, 10);
+            currentPage = 1; // Reset to page 1 when changing limit
+            renderLogs();
+            document.getElementById('logContainer').scrollTop = 0;
+        }
+
+        // --- Live Auto-Refresh ---
+        let liveRefreshInterval = null;
+        function toggleLiveRefresh() {
+            const btn = document.getElementById('liveToggleBtn');
+            if (liveRefreshInterval) {
+                // Turn Off
+                clearInterval(liveRefreshInterval);
+                liveRefreshInterval = null;
+                btn.innerText = "🔴 Auto: OFF";
+                btn.style.borderColor = "var(--border)";
+                btn.style.color = "var(--text-main)";
+            } else {
+                // Turn On
+                fetchLogs(true); // fetch immediately (silent)
+                liveRefreshInterval = setInterval(() => fetchLogs(true), 3000); // then every 3s (silent)
+                btn.innerText = "🟢 Auto: ON";
+                btn.style.borderColor = "var(--pre-color)";
+                btn.style.color = "var(--pre-color)";
             }
-            
-            // Text match
-            if(!query) return true;
-            
-            const textToSearch = (
-                log.message + 
-                log.level + 
-                (log.meta ? JSON.stringify(log.meta) : '')
-            ).toLowerCase();
-            
-            return textToSearch.includes(query);
+        }
+
+        // --- Export CSV ---
+        function exportCSV() {
+            if (currentFilteredLogs.length === 0) return alert("No logs to export!");
+
+            // Define CSV structure
+            const headers = ["Timestamp", "Level", "Message", "RequestID", "Metadata"];
+            const rows = currentFilteredLogs.map(log => {
+                const date = new Date(log.timestamp).toISOString();
+                const reqId = log.meta && log.meta.reqId ? log.meta.reqId : "";
+                // Stringify meta and escape quotes for CSV
+                const metaStr = JSON.stringify(log.meta || {}).replace(/"/g, '""');
+                // Escape main message
+                const msgStr = log.message.replace(/"/g, '""');
+
+                return `"${date}","${log.level}","${msgStr}","${reqId}","${metaStr}"`;
+            });
+
+            const csvContent = headers.join(",") + "\n" + rows.join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `logsphere-export-${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- Developer Tools: Copy & Clear ---
+        async function copyToClipboard(btn, text) {
+            try {
+                // Unescape the HTML we escaped earlier for HTML attributes
+                const unescaped = text.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+                await navigator.clipboard.writeText(unescaped);
+                const original = btn.innerText;
+                btn.innerText = "✅ Copied!";
+                setTimeout(() => btn.innerText = original, 2000);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+        }
+
+        function clearLogs() {
+            showClearModal();
+        }
+
+        function showClearModal() {
+            document.getElementById('clearOverlay').style.display = 'flex';
+        }
+
+        function hideClearModal() {
+            document.getElementById('clearOverlay').style.display = 'none';
+        }
+
+        async function confirmClear() {
+            hideClearModal();
+            try {
+                const res = await fetch(getApiUrl('api/clear'), { method: 'DELETE' });
+                if (!res.ok) throw new Error("Failed to clear logs");
+
+                // Re-fetch
+                fetchLogs();
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        // Hotkeys
+        document.addEventListener('keydown', (e) => {
+            // Cmd/Ctrl + F to focus search
+            if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+            // Esc to clear search
+            if (e.key === 'Escape') {
+                if (document.activeElement === document.getElementById('searchInput')) {
+                    document.getElementById('searchInput').value = '';
+                    document.getElementById('searchInput').blur();
+                    filterLogs();
+                }
+            }
         });
-        
-        // Reset to first page on filter
-        currentPage = 1;
-        renderLogs();
-    }
 
-    function changePage(delta) {
-        currentPage += delta;
-        renderLogs();
-        // Scroll back to top of container
-        document.getElementById('logContainer').scrollTop = 0;
-    }
-
-    function changeLimit() {
-        logsPerPage = parseInt(document.getElementById('limitSelect').value, 10);
-        currentPage = 1; // Reset to page 1 when changing limit
-        renderLogs();
-        document.getElementById('logContainer').scrollTop = 0;
-    }
-
-    // --- Live Auto-Refresh ---
-    let liveRefreshInterval = null;
-    function toggleLiveRefresh() {
-        const btn = document.getElementById('liveToggleBtn');
-        if (liveRefreshInterval) {
-            // Turn Off
-            clearInterval(liveRefreshInterval);
-            liveRefreshInterval = null;
-            btn.innerText = "🔴 Auto: OFF";
-            btn.style.borderColor = "var(--border)";
-            btn.style.color = "var(--text-main)";
-        } else {
-            // Turn On
-            fetchLogs(); // fetch immediately
-            liveRefreshInterval = setInterval(fetchLogs, 3000); // then every 3s
-            btn.innerText = "🟢 Auto: ON";
-            btn.style.borderColor = "var(--pre-color)";
-            btn.style.color = "var(--pre-color)";
+        // Helper to prevent XSS string injections
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
-    }
 
-    // --- Export CSV ---
-    function exportCSV() {
-        if(currentFilteredLogs.length === 0) return alert("No logs to export!");
-        
-        // Define CSV structure
-        const headers = ["Timestamp", "Level", "Message", "RequestID", "Metadata"];
-        const rows = currentFilteredLogs.map(log => {
-            const date = new Date(log.timestamp).toISOString();
-            const reqId = log.meta && log.meta.reqId ? log.meta.reqId : "";
-            // Stringify meta and escape quotes for CSV
-            const metaStr = JSON.stringify(log.meta || {}).replace(/"/g, '""');
-            // Escape main message
-            const msgStr = log.message.replace(/"/g, '""');
-            
-            return `"${date}","${log.level}","${msgStr}","${reqId}","${metaStr}"`;
+        // Change theme and save to localStorage
+        function changeTheme() {
+            const theme = document.getElementById('themeFilter').value;
+            localStorage.setItem('LogSphereTheme', theme);
+            if (theme === 'system') {
+                const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        }
+
+        // Set theme dropdown accurately based on preference saved
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem('LogSphereTheme') || 'system';
+            document.getElementById('themeFilter').value = savedTheme;
         });
-        
-        const csvContent = headers.join(",") + "\n" + rows.join("\n");
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `logsphere-export-${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
 
-    // --- Developer Tools: Copy & Clear ---
-    async function copyToClipboard(btn, text) {
-        try {
-            // Unescape the HTML we escaped earlier for HTML attributes
-            const unescaped = text.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-            await navigator.clipboard.writeText(unescaped);
-            const original = btn.innerText;
-            btn.innerText = "✅ Copied!";
-            setTimeout(() => btn.innerText = original, 2000);
-        } catch (err) {
-            console.error('Failed to copy', err);
+        function logout() {
+            showLogoutModal();
         }
-    }
 
-    async function clearLogs() {
-        if(!confirm("Are you sure you want to permanently delete all log files?")) return;
-        
-        try {
-            const res = await fetch(window.location.pathname + '/api/clear', { method: 'DELETE' });
-            if(!res.ok) throw new Error("Failed to clear logs");
-            
-            // Re-fetch
-            fetchLogs();
-            alert("Logs have been completely cleared.");
-        } catch (err) {
-            alert("Error: " + err.message);
+        function showLogoutModal() {
+            document.getElementById('logoutOverlay').style.display = 'flex';
         }
-    }
 
-    // Hotkeys
-    document.addEventListener('keydown', (e) => {
-        // Cmd/Ctrl + F to focus search
-        if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        function hideLogoutModal() {
+            document.getElementById('logoutOverlay').style.display = 'none';
+        }
+
+        async function confirmLogout() {
+            try {
+                const res = await fetch(getApiUrl('logout'), { method: 'POST' });
+                if (res.ok) {
+                    window.location.replace(window.location.pathname);
+                }
+            } catch (err) {
+                console.error("Logout failed:", err);
+                hideLogoutModal();
+            }
+        }
+
+
+        // Initial load
+        fetchLogs();
+
+        // Login Modal Logic
+        function showLoginModal() {
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            document.getElementById('searchInput').focus();
-        }
-        // Esc to clear search
-        if (e.key === 'Escape') {
-            if (document.activeElement === document.getElementById('searchInput')) {
-                document.getElementById('searchInput').value = '';
-                document.getElementById('searchInput').blur();
-                filterLogs();
+            const errorEl = document.getElementById('loginError');
+            errorEl.style.display = 'none';
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch(getApiUrl(''), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (res.ok) {
+                    hideLoginModal();
+                    fetchLogs(); // Retry fetching logs
+                } else {
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.innerText = "Connection error";
+                errorEl.style.display = 'block';
             }
-        }
-    });
-
-    // Helper to prevent XSS string injections
-    function escapeHtml(unsafe) {
-        if(!unsafe) return '';
-        return String(unsafe)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    // Change theme and save to localStorage
-    function changeTheme() {
-        const theme = document.getElementById('themeFilter').value;
-        localStorage.setItem('LogSphereTheme', theme);
-        if (theme === 'system') {
-            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-        } else {
-            document.documentElement.setAttribute('data-theme', theme);
-        }
-    }
-
-    // Set theme dropdown accurately based on preference saved
-    document.addEventListener("DOMContentLoaded", () => {
-        const savedTheme = localStorage.getItem('LogSphereTheme') || 'system';
-        document.getElementById('themeFilter').value = savedTheme;
-    });
-
-    async function logout() {
-        if(!confirm("Are you sure you want to logout?")) return;
-        try {
-            const res = await fetch(window.location.pathname + '/logout', { method: 'POST' });
-            if(res.ok) window.location.reload();
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
-    }
-
-    // Initial load
-    fetchLogs();
-</script>
+        });
+    </script>
 
 </body>
+
 </html>

@@ -34,6 +34,14 @@ let config = {
   maxExpireDays: false, // Default: false (never expire by days)
   discordWebhookUrl: null, // Default: no webhook
   logDir: path.join(process.cwd(), 'logs'), // Set default log location relative to project root
+  minLevel: 'DEBUG',    // Default: capture everything
+};
+
+const LEVEL_PRIORITIES = {
+  'DEBUG': 0,
+  'INFO': 1,
+  'WARN': 2,
+  'ERROR': 3
 };
 
 // Apply transport configuration
@@ -100,6 +108,14 @@ function buildEntry(level, message, meta = {}) {
 
 // Core logging function – sends entry to all transports asynchronously
 function log(level, message, meta = {}) {
+  // Check if log level meets the minimum threshold
+  const currentPriority = LEVEL_PRIORITIES[level] || 0;
+  const minPriority = LEVEL_PRIORITIES[config.minLevel.toUpperCase()] || 0;
+
+  if (currentPriority < minPriority) {
+    return; // Skip logging if below threshold
+  }
+
   const entry = buildEntry(level, message, meta);
   const json = JSON.stringify(entry) + '\n';
   transports.forEach((t) => {

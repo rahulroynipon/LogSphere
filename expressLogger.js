@@ -37,7 +37,14 @@ function createExpressLogger(options = {}) {
     res.locals.reqId = reqId;
     res.setHeader('X-Request-Id', reqId);
 
-    if (config.excludePaths.includes(req.path)) {
+    // Skip logging if path matches or if skipLogging flag is set
+    // We use originalUrl to ensure we check the full path before any router-level modification
+    const fullPath = req.originalUrl.split('?')[0]; 
+    const isExcluded = config.excludePaths.some(p => 
+      fullPath === p || fullPath.startsWith(p.endsWith('/') ? p : p + '/')
+    );
+
+    if (isExcluded || req.skipLogging) {
       return next();
     }
 
@@ -45,7 +52,7 @@ function createExpressLogger(options = {}) {
     const reqInfo = {
       reqId,
       method: req.method,
-      url: req.url,
+      url: req.originalUrl,
       ip: req.ip || req.connection.remoteAddress
     };
 
@@ -64,6 +71,9 @@ function createExpressLogger(options = {}) {
 
     // Hook into response finish to log the result
     res.on('finish', () => {
+      // Check again if we should skip logging (might have been set by downstream middleware)
+      if (req.skipLogging) return;
+
       const duration = Date.now() - start;
       const resInfo = {
         reqId,
@@ -72,14 +82,14 @@ function createExpressLogger(options = {}) {
       };
 
       if (res.statusCode >= 500) {
-        logger.error(`Request Failed: ${req.method} ${req.url}`, new Error(`HTTP ${res.statusCode}`), resInfo);
+        logger.error(`Request Failed: ${req.method} ${req.originalUrl}`, new Error(`HTTP ${res.statusCode}`), resInfo);
       } else if (res.statusCode >= 400) {
-        logger.warn(`Request Warning: ${req.method} ${req.url}`, resInfo);
+        logger.warn(`Request Warning: ${req.method} ${req.originalUrl}`, resInfo);
       } else if (duration > config.slowRequestThresholdMs) {
         // Flag slow queries specifically
-        logger.warn(`Slow Request Detected: ${req.method} ${req.url} took ${duration}ms`, resInfo);
+        logger.warn(`Slow Request Detected: ${req.method} ${req.originalUrl} took ${duration}ms`, resInfo);
       } else {
-        logger.info(`Request Completed: ${req.method} ${req.url}`, resInfo);
+        logger.info(`Request Completed: ${req.method} ${req.originalUrl}`, resInfo);
       }
     });
 

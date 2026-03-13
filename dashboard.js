@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const logger = require('./logger');
 
 // Dashboard logic
 
@@ -57,6 +58,12 @@ function readLogFile(filePath) {
 function createDashboardRouter(options = {}) {
     const router = express.Router();
     
+    // Flag all dashboard requests to skip logging in expressLogger
+    router.use((req, res, next) => {
+        req.skipLogging = true;
+        next();
+    });
+
     // Default to the project root logs folder, or use the configured path
     const LOG_DIR = options.logDir || path.join(process.cwd(), 'logs');
 
@@ -93,28 +100,33 @@ function createDashboardRouter(options = {}) {
     router.post('/', express.json(), (req, res) => {
         const { username, password } = req.body;
         if (username === options.username && password === options.password) {
+            logger.info(`Dashboard: User "${username}" logged in successfully`, { category: 'dashboard-auth', username });
             const token = Buffer.from(`${username}:${password}`).toString('base64');
             // Set cookie for 7 days
             res.setHeader('Set-Cookie', `LogSphereAuth=${token}; Path=${req.baseUrl || '/'}; HttpOnly; Max-Age=${7 * 24 * 60 * 60}`);
             return res.json({ success: true });
         }
+        logger.warn(`Dashboard: Failed login attempt for user "${username}"`, { category: 'dashboard-auth', username });
         res.status(401).json({ error: 'Invalid credentials' });
     });
 
-    // 1. Serve the HTML Web UI or Login Page
+    // 1. Serve the HTML Web UI
     router.get('/', (req, res) => {
-        if (isAuthorized(req)) {
-            res.sendFile(path.join(__dirname, 'dashboard', 'index.html'));
-        } else {
-            res.sendFile(path.join(__dirname, 'dashboard', 'login.html'));
-        }
+        res.sendFile(path.join(__dirname, 'dashboard', 'index.html'));
     });
+
 
     // Handle Logout
     router.post('/logout', (req, res) => {
-        res.setHeader('Set-Cookie', `LogSphereAuth=; Path=${req.baseUrl || '/'}; HttpOnly; Max-Age=0`);
+        const basePath = req.baseUrl || '/';
+        res.setHeader('Set-Cookie', [
+            `LogSphereAuth=; Path=${basePath}; HttpOnly; Max-Age=0`,
+            `LogSphereAuth=; Path=${basePath}/; HttpOnly; Max-Age=0`,
+            `LogSphereAuth=; Path=/; HttpOnly; Max-Age=0`
+        ]);
         res.json({ success: true });
     });
+
 
     // 2. Build the JSON API to feed the dashboard UI
 
@@ -162,6 +174,7 @@ function createDashboardRouter(options = {}) {
                 for (const file of allFiles) {
                     fs.unlinkSync(path.join(LOG_DIR, file));
                 }
+                logger.warn(`Dashboard: All log files cleared by user`, { category: 'dashboard-admin' });
             }
             res.status(200).json({ success: true });
         } catch (e) {
