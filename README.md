@@ -40,34 +40,43 @@ npm install logsphere
 
 ### 2. Basic Usage (Express)
 
+#### CommonJS (Node.js)
 ```javascript
 const express = require('express');
 const LogSphere = require('logsphere');
 
 const app = express();
 
-// 1. Setup the Logger Middleware
-app.use(LogSphere.expressLogger({
-  logBody: true, // Optional: log request body
-  logQuery: true // Optional: log query params
-}));
+// Setup the Logger Middleware
+app.use(LogSphere.expressLogger({ logBody: true }));
 
-// 2. Setup the Web Dashboard (Optional & Secure!)
+// Setup the Web Dashboard
 app.use('/logs', LogSphere.dashboard({
-  username: 'admin',      // Optional: username protect your logs
+  username: 'admin',
   password: 'securePassword123' 
 }));
 
+app.listen(3000);
+```
+
+#### ESM (TypeScript / Modern Node)
+```javascript
+import express from 'express';
+import { dashboard, expressLogger, info } from 'logsphere';
+
+const app = express();
+
+app.use(expressLogger());
+app.use('/logs', dashboard());
+
 app.get('/', (req, res) => {
-  LogSphere.info("Hello LogSphere!"); // Direct logging
-  res.send('Welcome to the planet!');
+  info("ESM Import Works!");
+  res.send('Hello ESM!');
 });
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
-  console.log("View logs at http://localhost:3000/logs");
-});
+app.listen(3000);
 ```
+
 
 ---
 
@@ -104,14 +113,22 @@ Accessed via the route where you mount `LogSphere.dashboard()`, the UI provides:
 
 You can use the logger anywhere in your application:
 
+#### CommonJS
 ```javascript
 const LogSphere = require('logsphere');
-
-LogSphere.debug("Debugging complex logic", { state: currentObj });
 LogSphere.info("System status update");
-LogSphere.warn("Low disk space warning");
-LogSphere.error("Fatal Error occurred", new Error("Database timeout"), { db: "main_cluster" });
 ```
+
+#### ESM
+```javascript
+import { info, error, warn, debug } from 'logsphere';
+
+debug("Debugging complex logic", { state: currentObj });
+info("System status update");
+warn("Low disk space warning");
+error("Fatal Error occurred", new Error("Database timeout"), { db: "main_cluster" });
+```
+
 
 ---
 

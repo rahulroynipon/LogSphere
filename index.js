@@ -1,8 +1,6 @@
-/**
- * LogSphere - A ready-to-use, beautiful, and configurable logging system.
- * 
- * Simply require this module and use it instantly, or configure it explicitly.
- */
+const logger = require('./logger');
+const expressLogger = require('./expressLogger');
+const dashboard = require('./dashboard');
 
 /**
  * LogSphere - Professional Node.js Logging System
@@ -11,27 +9,17 @@
  * @license MIT
  */
 
-const logger = require('./logger');
-const expressLogger = require('./expressLogger');
-const dashboard = require('./dashboard');
+// Export individual functions for ESM compatibility
+exports.configure = logger.configure;
+exports.expressLogger = expressLogger;
+exports.dashboard = dashboard;
 
-// Export the core LogSphere interface
-module.exports = {
-  // Configures the global logging parameters
-  configure: logger.configure,
-  
-  // The Express configuration middleware
-  expressLogger: expressLogger,
+// Direct logging methods for easy access, e.g., LogSphere.info("Hello")
+exports.debug = logger.debug;
+exports.info = logger.info;
+exports.warn = logger.warn;
+exports.error = logger.error;
 
-  // Developer Web UI Dashboard Router
-  dashboard: dashboard,
+// Access to the raw logger instance if needed
+exports.logger = logger;
 
-  // Direct logging methods for easy access, e.g., LogSphere.info("Hello")
-  debug: logger.debug,
-  info: logger.info,
-  warn: logger.warn,
-  error: logger.error,
-  
-  // Access to the raw logger instance if needed
-  logger: logger
-};

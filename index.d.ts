@@ -33,3 +33,5 @@ export function debug(message: string, meta?: any): void;
 export function info(message: string, meta?: any): void;
 export function warn(message: string, meta?: any): void;
 export function error(message: string, err?: Error, meta?: any): void;
+export const logger: any;
+
