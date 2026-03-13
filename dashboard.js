@@ -60,28 +60,66 @@ function createDashboardRouter(options = {}) {
     // Default to the project root logs folder, or use the configured path
     const LOG_DIR = options.logDir || path.join(process.cwd(), 'logs');
 
-    // Basic Authentication Middleware
-    if (options.username && options.password) {
-        router.use((req, res, next) => {
-            const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-            const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+    // Authentication Helper
+    const isAuthorized = (req) => {
+        if (!options.username || !options.password) return true;
 
-            if (login && password && login === options.username && password === options.password) {
-                return next();
-            }
+        // Check for Basic Auth Header
+        const authHeader = req.headers.authorization || '';
+        if (authHeader.startsWith('Basic ')) {
+            const [user, pass] = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+            if (user === options.username && pass === options.password) return true;
+        }
 
-            res.set('WWW-Authenticate', 'Basic realm="LogSphere Secure Dashboard"');
-            res.status(401).send('Authentication required to view logs.');
-        });
-    }
+        // Check for Custom Cookie Auth
+        const cookies = req.headers.cookie || '';
+        const authCookie = cookies.split('; ').find(row => row.startsWith('LogSphereAuth='));
+        if (authCookie) {
+            const token = authCookie.split('=')[1];
+            const [user, pass] = Buffer.from(token, 'base64').toString().split(':');
+            if (user === options.username && pass === options.password) return true;
+        }
 
-    // 1. Serve the HTML Web UI (dashboard/index.html)
+        return false;
+    };
+
+    // Middleware to protect API routes
+    const protect = (req, res, next) => {
+        if (isAuthorized(req)) return next();
+        res.status(401).json({ error: 'Unauthorized' });
+    };
+
+    // Handle Login Post
+    router.post('/', express.json(), (req, res) => {
+        const { username, password } = req.body;
+        if (username === options.username && password === options.password) {
+            const token = Buffer.from(`${username}:${password}`).toString('base64');
+            // Set cookie for 7 days
+            res.setHeader('Set-Cookie', `LogSphereAuth=${token}; Path=${req.baseUrl || '/'}; HttpOnly; Max-Age=${7 * 24 * 60 * 60}`);
+            return res.json({ success: true });
+        }
+        res.status(401).json({ error: 'Invalid credentials' });
+    });
+
+    // 1. Serve the HTML Web UI or Login Page
     router.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname, 'dashboard', 'index.html'));
+        if (isAuthorized(req)) {
+            res.sendFile(path.join(__dirname, 'dashboard', 'index.html'));
+        } else {
+            res.sendFile(path.join(__dirname, 'dashboard', 'login.html'));
+        }
+    });
+
+    // Handle Logout
+    router.post('/logout', (req, res) => {
+        res.setHeader('Set-Cookie', `LogSphereAuth=; Path=${req.baseUrl || '/'}; HttpOnly; Max-Age=0`);
+        res.json({ success: true });
     });
 
     // 2. Build the JSON API to feed the dashboard UI
-    router.get('/api', async (req, res) => {
+
+    router.get('/api', protect, async (req, res) => {
+
         try {
             // Check if log directory exists
             if (!fs.existsSync(LOG_DIR)) {
@@ -115,7 +153,8 @@ function createDashboardRouter(options = {}) {
     });
 
     // 3. Build the Clear Logs API
-    router.delete('/api/clear', (req, res) => {
+    router.delete('/api/clear', protect, (req, res) => {
+
         try {
             if (fs.existsSync(LOG_DIR)) {
                 const allFiles = fs.readdirSync(LOG_DIR)

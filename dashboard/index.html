@@ -340,6 +340,7 @@
         <button onclick="exportCSV()" title="Export filtered logs as CSV">📥 CSV</button>
         <button id="liveToggleBtn" onclick="toggleLiveRefresh()" style="border-color: var(--border);">🔴 Auto: OFF</button>
         <button onclick="fetchLogs()">🔄 Refresh</button>
+        <button onclick="logout()" title="Logout from dashboard" style="border-color: var(--text-dim); color: var(--text-dim);">🚪 Logout</button>
     </div>
 </header>
 
@@ -643,6 +644,16 @@
         const savedTheme = localStorage.getItem('LogSphereTheme') || 'system';
         document.getElementById('themeFilter').value = savedTheme;
     });
+
+    async function logout() {
+        if(!confirm("Are you sure you want to logout?")) return;
+        try {
+            const res = await fetch(window.location.pathname + '/logout', { method: 'POST' });
+            if(res.ok) window.location.reload();
+        } catch (err) {
+            console.error("Logout failed:", err);
+        }
+    }
 
     // Initial load
     fetchLogs();
