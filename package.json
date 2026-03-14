@@ -1,6 +1,6 @@
 {
   "name": "logsphere",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A ready-to-use, professional Node.js logging system with a built-in web dashboard, log rotation, sensitive data redaction, and beautiful console output.",
   "main": "index.js",
   "types": "index.d.ts",
