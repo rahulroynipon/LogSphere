@@ -38,7 +38,7 @@ LogSphere uses a "Unified Config" system. Whether you use `configure()` or `expr
 *   **`configure(options)`**: Sets **Global Defaults**. This applies to everything (middleware, manual logs, dashboard).
 *   **`expressLogger(options)`**: Sets **Local Overrides**. These settings apply *only* to that specific middleware instance, allowing you to have different logging rules for different API sections.
 
-> [!IMPORTANT]
+> [!NOTE]
 > **Do I need both?**  
 > `configure()` only sets the rules. To actually start capturing HTTP requests automatically, you **must** still add `app.use(expressLogger())` to your application.
 
