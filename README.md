@@ -122,13 +122,40 @@ The dashboard is built for developers. No bulky setup—it's just a middleware.
 
 ---
 
-## 🩺 Direct Logging
-Use the logger anywhere in your logic, not just in Express.
-```javascript
-const { info, error } = require('logsphere');
+## 🩺 Direct Logging & Levels
 
-info("User login", { userId: 123 });
-error("Database timeout", new Error("E_TIMEOUT"));
+You can use LogSphere anywhere in your code, even outside of Express. Each method corresponds to a severity level and is color-coded in your terminal.
+
+### Available Methods
+
+| Method | Level | Terminal Icon | Best Use Case |
+| :--- | :--- | :---: | :--- |
+| `debug(msg, meta)` | `DEBUG` | 🐛 | High-volume technical details for development. |
+| `info(msg, meta)` | `INFO` | ℹ️ | General app flow (Server start, user login). |
+| `warn(msg, meta)` | `WARN` | ⚠️ | Important but non-critical issues (Low disk space). |
+| `error(msg, err, meta)` | `ERROR` | ❌ | Critical failures. Triggers Discord alerts. |
+
+### Implementation Examples
+
+```javascript
+const { debug, info, warn, error } = require('logsphere');
+
+// 1. Simple Log
+info("Server is listening on port 3000");
+
+// 2. Log with Context Data (Meta)
+debug("SQL Query executed", { duration: '12ms', query: 'SELECT * FROM users' });
+
+// 3. Warning for non-blocking issues
+warn("API Rate limit reached for IP: 1.2.3.4");
+
+// 4. Critical Errors (Captures Stack Trace)
+try {
+  throw new Error("Payment Gateway Timeout");
+} catch (err) {
+  // Pass the error object as the 2nd argument to capture the full stack trace
+  error("Transaction failed", err, { transactionId: 'TX_998' });
+}
 ```
 
 ---
