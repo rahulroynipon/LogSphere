@@ -103,6 +103,14 @@ app.use('/dashboard', dashboard({
 
 ---
 
+## 🎨 Dashboard Preview
+
+| 🌙 Dark Mode | ☀️ Light Mode |
+| :---: | :---: |
+| ![Dark UI](./dashboard/assets/screenshot-dark.png) | ![Light UI](./dashboard/assets/screenshot-light.png) |
+
+---
+
 ## 🎨 Dashboard Experience
 
 The dashboard is built for developers. No bulky setup—it's just a middleware.

@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.0] - 2026-03-14
+## [1.2.1] - 2026-03-14
 
 ### Added
 - **Premium Dashboard UI**: Redesigned header with glassmorphism effects and better layout.
