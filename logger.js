@@ -185,7 +185,7 @@ function error(msg, err, meta = {}) {
 
 // Configure logger dynamically
 function configure(options = {}) {
-  config = { ...config, ...options };
+  Object.assign(config, options);
   
   // Format sensitive keys to lowercase for case-insensitive matching
   if (config.sensitiveKeys) {
@@ -208,4 +208,5 @@ module.exports = {
   info,
   warn,
   error,
+  config, // Export the config object
 };

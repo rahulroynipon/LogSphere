@@ -2,6 +2,7 @@
 logs/
 
 # Exclude development/testing files
+test-app/
 test_final.js
 tmp.json
 start_dashboard.js

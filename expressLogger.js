@@ -27,7 +27,8 @@ function createExpressLogger(options = {}) {
     logQuery: true,
     excludePaths: [],
     slowRequestThresholdMs: 2000,
-    ...options
+    ...logger.config, // Inherit global settings
+    ...options       // Override with local options
   };
 
   return function expressLogger(req, res, next) {
@@ -38,11 +39,24 @@ function createExpressLogger(options = {}) {
     res.setHeader('X-Request-Id', reqId);
 
     // Skip logging if path matches or if skipLogging flag is set
-    // We use originalUrl to ensure we check the full path before any router-level modification
     const fullPath = req.originalUrl.split('?')[0]; 
-    const isExcluded = config.excludePaths.some(p => 
-      fullPath === p || fullPath.startsWith(p.endsWith('/') ? p : p + '/')
-    );
+    
+    // Ensure excludePaths is always an array to prevent crashes
+    const excludeList = Array.isArray(config.excludePaths) ? config.excludePaths : [];
+    
+    const isExcluded = excludeList.some(p => {
+      if (!p || typeof p !== 'string') return false;
+      
+      // Exact match
+      if (fullPath === p) return true;
+      
+      // Base path match (e.g., /dashboard excludes /dashboard/api)
+      const base = p.endsWith('/') ? p : p + '/';
+      // Safety: Don't allow "/" to accidentally exclude everything via startsWith
+      if (base === '/') return fullPath === '/';
+      
+      return fullPath.startsWith(base);
+    });
 
     if (isExcluded || req.skipLogging) {
       return next();
@@ -56,14 +70,36 @@ function createExpressLogger(options = {}) {
       ip: req.ip || req.connection.remoteAddress
     };
 
-    if (config.logHeaders) {
+    // Support both singular and plural forms for logging configuration
+    const shouldLogHeaders = config.logHeaders || config.logHeader;
+    const shouldLogBody = config.logBody || config.logBodys;
+    const shouldLogQuery = config.logQuery || config.logQueries;
+    const shouldLogResponse = config.logResponse || config.logResponses;
+
+    if (shouldLogHeaders) {
       reqInfo.headers = req.headers;
     }
-    if (config.logBody && req.body) {
+    if (shouldLogBody && req.body) {
       reqInfo.body = req.body;
     }
-    if (config.logQuery && Object.keys(req.query || {}).length > 0) {
+    if (shouldLogQuery && Object.keys(req.query || {}).length > 0) {
       reqInfo.query = req.query;
+    }
+
+    // Capture response body if requested
+    let resBody;
+    if (shouldLogResponse) {
+      const originalSend = res.send;
+      res.send = function(body) {
+        resBody = body;
+        return originalSend.apply(res, arguments);
+      };
+      
+      const originalJson = res.json;
+      res.json = function(body) {
+        resBody = body;
+        return originalJson.apply(res, arguments);
+      };
     }
 
     // Log the incoming request
@@ -80,6 +116,15 @@ function createExpressLogger(options = {}) {
         statusCode: res.statusCode,
         durationMs: duration
       };
+
+      if (shouldLogResponse && resBody) {
+        // Try to parse if it's a string, or just use it if it's already an object
+        try {
+          resInfo.responseBody = typeof resBody === 'string' ? JSON.parse(resBody) : resBody;
+        } catch (e) {
+          resInfo.responseBody = resBody;
+        }
+      }
 
       if (res.statusCode >= 500) {
         logger.error(`Request Failed: ${req.method} ${req.originalUrl}`, new Error(`HTTP ${res.statusCode}`), resInfo);

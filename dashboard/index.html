@@ -587,10 +587,12 @@
         let currentPage = 1;
         let logsPerPage = 100;
 
-        // Helper to get correct API URL regardless of trailing slashes
+        // Helper to get correct API URL regardless of trailing slashes or index.html in path
         function getApiUrl(endpoint) {
-            let path = window.location.pathname;
+            // Strip index.html from path if present
+            let path = window.location.pathname.replace(/\/index\.html$/, '');
             if (!path.endsWith('/')) path += '/';
+            
             // Remove leading slash from endpoint if present
             const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
             return path + cleanEndpoint;
@@ -665,12 +667,15 @@
                 const timeStr = `${date.toISOString().split('T')[0]} ${date.toLocaleTimeString()}`;
 
                 const reqId = log.meta && log.meta.reqId ? log.meta.reqId.split('-')[0] + '...' : '';
+                
+                // If message is an object, stringify it
+                const displayMessage = typeof log.message === 'string' ? log.message : JSON.stringify(log.message);
 
                 const summaryHTML = `
                 <div class="log-summary" onclick="this.parentElement.classList.toggle('expanded')">
                     <div class="log-time">${timeStr}</div>
                     <div class="log-level level-${log.level}">${log.level}</div>
-                    <div class="log-message">${escapeHtml(log.message)}</div>
+                    <div class="log-message">${escapeHtml(displayMessage)}</div>
                     <div class="log-reqid">${escapeHtml(reqId)}</div>
                 </div>
             `;

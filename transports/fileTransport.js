@@ -113,6 +113,23 @@ function rotateIfNeeded() {
     openNewLogStream();
     return;
   }
+
+  // Check if the log directory was changed via configure()
+  const expectedDirPath = path.resolve(LOG_DIR);
+  const currentDirPath = path.dirname(path.resolve(currentLogPath));
+  if (expectedDirPath !== currentDirPath) {
+    closeCurrentStream();
+    openNewLogStream();
+    return;
+  }
+
+  // Check if the file was deleted externally (e.g. by Dashboard Clear API)
+  if (!fs.existsSync(currentLogPath)) {
+    closeCurrentStream();
+    openNewLogStream();
+    return;
+  }
+
   // Rotate daily based on filename change
   const expectedName = getLogFileName();
   if (!currentLogPath.endsWith(expectedName)) {
@@ -126,16 +143,20 @@ function rotateIfNeeded() {
     // Rename old file with timestamp
     const timestamp = format(new Date(), 'HHmmss');
     const rotatedName = `${currentLogPath}.${timestamp}`;
-    fs.renameSync(currentLogPath, rotatedName);
-    // Gzip the rotated file
-    const gzip = zlib.createGzip();
-    const source = fs.createReadStream(rotatedName);
-    const destination = fs.createWriteStream(`${rotatedName}.gz`);
-    source.pipe(gzip).pipe(destination);
-    // Delete the uncompressed rotated file after compression finishes
-    destination.on('finish', () => {
-      fs.unlinkSync(rotatedName);
-    });
+    try {
+      fs.renameSync(currentLogPath, rotatedName);
+      // Gzip the rotated file
+      const gzip = zlib.createGzip();
+      const source = fs.createReadStream(rotatedName);
+      const destination = fs.createWriteStream(`${rotatedName}.gz`);
+      source.pipe(gzip).pipe(destination);
+      // Delete the uncompressed rotated file after compression finishes
+      destination.on('finish', () => {
+        try { fs.unlinkSync(rotatedName); } catch (e) {}
+      });
+    } catch (e) {
+      console.error('Log rotation rename failed:', e);
+    }
     openNewLogStream();
   }
 }

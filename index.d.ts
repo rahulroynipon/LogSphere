@@ -9,13 +9,20 @@ export interface LogSphereConfig {
   maxExpireDays?: number | false;
   discordWebhookUrl?: string | null;
   logDir?: string;
+  minLevel?: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
+  // Standard and common misspelling variants for ease of use
+  logHeaders?: boolean;
+  logHeader?: boolean;
+  logBody?: boolean;
+  logBodys?: boolean;
+  logQuery?: boolean;
+  logQueries?: boolean;
+  logResponse?: boolean;
+  logResponses?: boolean;
+  excludePaths?: string[];
 }
 
 export interface ExpressLoggerOptions extends LogSphereConfig {
-  logHeaders?: boolean;
-  logBody?: boolean;
-  logQuery?: boolean;
-  excludePaths?: string[];
   slowRequestThresholdMs?: number;
 }
 
@@ -33,5 +40,8 @@ export function debug(message: string, meta?: any): void;
 export function info(message: string, meta?: any): void;
 export function warn(message: string, meta?: any): void;
 export function error(message: string, err?: Error, meta?: any): void;
-export const logger: any;
+export const logger: {
+  config: LogSphereConfig;
+  [key: string]: any;
+};
 

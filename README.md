@@ -1,211 +1,133 @@
 # 🪐 LogSphere
 
+### Transparent, Resilient, and Beautiful Logging for Node.js & Express.
+
 [![npm version](https://img.shields.io/npm/v/logsphere.svg)](https://www.npmjs.com/package/logsphere)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**LogSphere** is a professional, industrial-grade logging system for Node.js and Express. It combines beautiful console visualization, high-performance file rotation, sensitive data redaction, and a **real-time Developer Web Dashboard** in one plug-and-play package.
+**LogSphere** is a zero-config-needed logging suite that gives you "Enterprise Grade" visibility without the complexity. It turns your messy terminal logs into a structured, searchable, and visual experience.
 
 ---
 
-## ✨ Features
+## ⚡️ The 30-Second Setup
 
-- 🚀 **Plug-and-Play**: Setup in 2 lines of code.
-- 📊 **Web Dashboard**: Built-in UI for searching, filtering, and live-tailing logs.
-- 🛡️ **Security First**: Automatic redaction of passwords, tokens, and secrets.
-- 🕒 **Log Rotation**: Automatic daily rotation and configurable retention policies.
-- 🐌 **Performance Metrics**: Identifies slow requests automatically.
-- 🔔 **Alerting**: Built-in support for Discord webhooks on critical errors.
-- 📦 **NPM Ready**: Fully typed with TypeScript support.
-- 🎨 **Premium UI**: Modern glassmorphism dashboard with dark, light, and system theme support.
-- 🌫️ **Smart Filtering**: Advanced, persistent filters that stay active during auto-refreshes.
-- 🚫 **Path Exclusion**: Programmatically exclude noisy routes (like assets or health checks) from logs.
+Stop wrestling with configurations. LogSphere works out of the box.
 
----
-
-## 📸 Dashboard Preview
-
-### Dark Mode (Default)
-![Dashboard Dark](./dashboard/assets/screenshot-dark.png)
-
-### Light Mode
-![Dashboard Light](./dashboard/assets/screenshot-light.png)
-
----
-
-## 🚀 Quick Start
-
-### 1. Install
-
-```bash
-npm install logsphere
-```
-
-### 2. Basic Usage (Express)
-
-#### CommonJS (Node.js)
 ```javascript
 const express = require('express');
-const LogSphere = require('logsphere');
+const { expressLogger, dashboard } = require('logsphere');
 
 const app = express();
 
-// Setup the Logger Middleware
-app.use(LogSphere.expressLogger({ logBody: true }));
+// 1. Log every request automatically
+app.use(expressLogger({ logBody: true }));
 
-// Setup the Web Dashboard
-app.use('/logs', LogSphere.dashboard({
+// 2. See your logs in a beautiful UI at /dashboard
+app.use('/dashboard', dashboard({ username: 'admin', password: '123' }));
+
+app.listen(3000);
+```
+
+---
+
+## 🔧 Configuration Methods
+
+LogSphere uses a "Unified Config" system. Whether you use `configure()` or `expressLogger()`, you can pass the same set of options. 
+
+### What's the difference?
+*   **`configure(options)`**: Sets **Global Defaults**. This applies to everything (middleware, manual logs, dashboard).
+*   **`expressLogger(options)`**: Sets **Local Overrides**. These settings apply *only* to that specific middleware instance, allowing you to have different logging rules for different API sections.
+
+> [!IMPORTANT]
+> **Do I need both?**  
+> `configure()` only sets the rules. To actually start capturing HTTP requests automatically, you **must** still add `app.use(expressLogger())` to your application.
+
+```javascript
+const { configure, expressLogger } = require('logsphere');
+
+// 1. Set global rules (Applies everywhere)
+configure({ 
+  logDir: path.join(__dirname, 'logs'),
+  logBody: true 
+});
+
+// 2. Use defaults
+app.use(expressLogger()); 
+
+// 3. Override for specific routes
+app.use('/api/v2', expressLogger({ 
+  logBody: false, // Turn off body logging just for V2
+  slowRequestThresholdMs: 500 // Be stricter with performance here
+}));
+```
+
+### 📋 Unified Options Table (Accepted by both)
+
+| Option | Default | Description |
+| :--- | :--- | :--- |
+| `logDir` | `'./logs'` | Path to store logs (Absolute recommended). |
+| `minLevel` | `'DEBUG'` | Min level: `DEBUG`, `INFO`, `WARN`, `ERROR`. |
+| `logBody` / `logBodys` | `false` | Capture incoming `req.body`. |
+| `logHeaders` / `logHeader` | `false` | Capture incoming request headers. |
+| `logQuery` / `logQueries` | `true` | Capture URL query parameters. |
+| `logResponse` | `false` | Capture outgoing response body. |
+| `excludePaths` | `[]` | Array of path prefixes to skip from logging. |
+| `sensitiveKeys` | `[...]` | List of keys to redact (Case-Insensitive). |
+| `slowRequestThresholdMs` | `2000` | Flag requests exceeding this duration. |
+| `maxExpireDays` | `false` | Auto-delete logs older than X days. |
+| `discordWebhookUrl` | `null` | Target Discord Webhook for ERROR alerts. |
+| `enableConsoleLogs` | `true` | Toggle the colorized terminal output. |
+
+---
+
+## 🚀 Middleware & Dashboard
+
+### `expressLogger(options)`
+Zero-setup middleware. It automatically inherits from `configure()`, but you can pass local overrides if needed.
+
+```javascript
+app.use(expressLogger({ 
+  logBody: false // Override global setting for this instance
+}));
+```
+
+### `dashboard(options)`
+Mounts the Web UI. Requires `username` and `password` for security.
+
+```javascript
+app.use('/dashboard', dashboard({
   username: 'admin',
-  password: 'securePassword123' 
-}));
-
-app.listen(3000);
-```
-
-#### ESM (TypeScript / Modern Node)
-```javascript
-import express from 'express';
-import { dashboard, expressLogger, info } from 'logsphere';
-
-const app = express();
-
-app.use(expressLogger());
-app.use('/logs', dashboard());
-
-app.get('/', (req, res) => {
-  info("ESM Import Works!");
-  res.send('Hello ESM!');
-});
-
-app.listen(3000);
-```
-
-
----
-
-## 🛠️ Configuration Options
-
-LogSphere is highly configurable via `LogSphere.configure()` or directly inside the `expressLogger` middleware.
-
-| Option | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `logDir` | `string` | `'./logs'` | Custom path where log files will be stored. |
-| `sensitiveKeys` | `string[]` | `['password', 'token', ...]` | Keys to redact in JSON logs automatically. |
-| `maxLogFiles` | `number` | `false` | Max number of log files to keep (oldest are deleted). |
-| `maxExpireDays` | `number` | `false` | Number of days to keep logs (deleted if older). |
-| `discordWebhookUrl` | `string` | `null` | Discord URL to send critical error alerts. |
-| `slowRequestThresholdMs` | `number` | `2000` | Threshold to flag and log slow requests. |
-| `excludePaths` | `string[]` | `[]` | Paths (and their prefixes) to exclude from `expressLogger`. |
-| `minLevel` | `string` | `'DEBUG'` | Minimum log level to capture (`DEBUG`, `INFO`, `WARN`, `ERROR`). |
-| `enableConsoleLogs` | `boolean` | `true` | Enable/Disable beautiful console output. |
-
----
-
-## 🌍 Environment Setup
-
-Configure LogSphere differently based on your environment for the best experience.
-
-### 🛠️ Development Mode
-Capture everything for easy debugging.
-
-```javascript
-LogSphere.configure({
-  minLevel: 'DEBUG',       // See every detail
-  enableConsoleLogs: true, // Beautiful terminal output
-  logBody: true            // Log full request bodies
-});
-```
-
-### 🚀 Production Mode
-Keep logs clean and performant.
-
-```javascript
-LogSphere.configure({
-  minLevel: 'INFO',              // Ignore technical debug noise
-  enableConsoleLogs: false,      // Better performance in prod
-  maxExpireDays: 30,             // Auto-delete logs after a month
-  discordWebhookUrl: 'https://...' // Get alerts for ERRORs
-});
-```
-
----
-
-## 📈 Developer Dashboard
-
-Accessed via the route where you mount `LogSphere.dashboard()`, the UI provides:
-
-- **Live Tailing**: Toggle "Auto Refresh" to stream logs. Filters stay active during updates!
-- **Advanced Search**: Case-insensitive filtering by message, request ID, IP, or log level.
-- **Date Filtering**: Precision range filters with instant UI state updates.
-- **Exporting**: One-click "CSV Export" for current filtered results.
-- **Premium Modals**: Secure login, logout, and clearing actions using a modern modal system.
-- **Expandable Details**: Click any log for deep-dive JSON analysis and formatted stack traces.
-
----
-
-## 🚫 Excluding Routes
-To keep your logs clean, you can exclude specific routes or entire path prefixes:
-
-```javascript
-app.use(LogSphere.expressLogger({
-  excludePaths: ['/logs', '/static', '/health-check']
+  password: 'your-secure-password'
 }));
 ```
-> **Note**: LogSphere automatically suppresses logging for its own internal dashboard APIs to prevent feedback loops.
+
+---
+
+## 🎨 Dashboard Experience
+
+The dashboard is built for developers. No bulky setup—it's just a middleware.
+
+- **Live Mode**: Click "Auto" and watch logs stream in as they happen.
+- **Deep Search**: Filter by Request ID, IP Address, or status codes instantly.
+- **Expandable Rows**: Click any log to see its metadata, body, and colorized stack traces.
+- **Self-Healing**: If files are cleared/deleted, the logger re-creates them instantly.
 
 ---
 
 ## 🩺 Direct Logging
-
-You can use the logger anywhere in your application:
-
-#### CommonJS
+Use the logger anywhere in your logic, not just in Express.
 ```javascript
-const LogSphere = require('logsphere');
-LogSphere.info("System status update");
-```
+const { info, error } = require('logsphere');
 
-#### ESM
-```javascript
-import { info, error, warn, debug } from 'logsphere';
-
-debug("Debugging complex logic", { state: currentObj });
-info("System status update");
-warn("Low disk space warning");
-error("Fatal Error occurred", new Error("Database timeout"), { db: "main_cluster" });
-```
-
-
----
-
-## 🔐 Security Best Practices
-
-We recommend **always** using the built-in authentication for the dashboard in production environments:
-
-```javascript
-app.use('/logs', LogSphere.dashboard({
-  username: process.env.LOG_USER,
-  password: process.env.LOG_PASSWORD
-}));
+info("User login", { userId: 123 });
+error("Database timeout", new Error("E_TIMEOUT"));
 ```
 
 ---
 
-## 🤝 Contributing
+## 🤝 Community & Support
 
-Contributions are welcome! Whether it's a bug report, feature request, or a pull request, we appreciate your help. Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
+- **Found a bug?** Open an [Issue](https://github.com/rahulroynipon/LogSphere/issues).
+- **Author**: [Rahul Roy Nipon](mailto:rahulroynipon@gmail.com)
 
----
-
-## 👤 Author
-
-**Rahul Roy Nipon**
-
-- **Email**: [rahulroynipon@gmail.com](mailto:rahulroynipon@gmail.com)
-- **GitHub**: [@rahulroynipon](https://github.com/rahulroynipon)
-- **LinkedIn**: [rahulroynipon](https://linkedin.com/in/rahulroynipon)
-
----
-
-## 📄 License
-
-MIT © [Rahul Roy Nipon](LICENSE)
+MIT License © 2026 Rahul Roy Nipon
