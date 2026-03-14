@@ -78,6 +78,15 @@ app.use('/api/v2', expressLogger({
 | `discordWebhookUrl` | `null` | Target Discord Webhook for ERROR alerts. |
 | `enableConsoleLogs` | `true` | Toggle the colorized terminal output. |
 
+### 🚦 Log Level Hierarchy (minLevel)
+The `minLevel` setting follows a strict hierarchy. When you set a minimum level, LogSphere captures that level **and everything above it**.
+
+**DEBUG** (1) < **INFO** (2) < **WARN** (3) < **ERROR** (4)
+
+*   `minLevel: 'INFO'`: Captures **INFO, WARN, and ERROR**. (Ignores Debug)
+*   `minLevel: 'ERROR'`: Captures **only ERRORs**. (Best for quiet production)
+*   `minLevel: 'DEBUG'`: Captures **Everything**. (Default for development)
+
 ---
 
 ## 🚀 Middleware & Dashboard
@@ -160,9 +169,12 @@ try {
 
 ---
 
-## 🤝 Community & Support
-
 - **Found a bug?** Open an [Issue](https://github.com/rahulroynipon/LogSphere/issues).
-- **Author**: [Rahul Roy Nipon](mailto:rahulroynipon@gmail.com)
+
+### 🏷️ Author & Maintenance
+**Rahul Roy Nipon**
+- 📧 **Email**: [rahulroynipon@gmail.com](mailto:rahulroynipon@gmail.com)
+- 🔗 **LinkedIn**: [linkedin.com/in/rahulroynipon](https://linkedin.com/in/rahulroynipon)
+- 🐙 **GitHub**: [github.com/rahulroynipon](https://github.com/rahulroynipon)
 
 MIT License © 2026 Rahul Roy Nipon
